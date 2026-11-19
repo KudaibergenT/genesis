@@ -1,0 +1,43 @@
+{
+  "base_currency": "USD",
+  "company": "Harbor Clinics GmbH",
+  "counts": {
+    "documents": 97,
+    "fx_rates": 60,
+    "invoices": 65,
+    "ledger_rows": 696,
+    "payments": 32
+  },
+  "currency_exponents": {
+    "EUR": 2,
+    "JPY": 0,
+    "USD": 2
+  },
+  "episode_id": "ep-bqmaam37wabqysh2",
+  "files": [
+    "manifest.json",
+    "ledger.csv",
+    "invoices.jsonl",
+    "payments.jsonl",
+    "fx.csv",
+    "policy.json"
+  ],
+  "generator_version": "0.1.0",
+  "issue_types": [
+    "duplicate_invoice",
+    "payment_allocation",
+    "fx_conversion",
+    "period_cutoff"
+  ],
+  "money_format": "integer minor units; exponent per currency_exponents",
+  "period_end": "2026-07-31",
+  "period_start": "2026-07-01",
+  "rounding": {
+    "mode": "ROUND_HALF_UP",
+    "unit": "minor"
+  },
+  "schema_version": "1.0",
+  "time_format": "ISO-8601 with UTC offset",
+  "timezone": "UTC",
+  "utc_offset": "+00:00"
+}

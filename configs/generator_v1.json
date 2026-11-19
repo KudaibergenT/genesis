@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0",
+  "errors": {
+    "duplicate_invoice": {"count": [0, 2], "variants": ["same_number", "new_number"]},
+    "payment_allocation": {"count": [0, 2], "variants": ["missing", "partial"]}
+  }
+}

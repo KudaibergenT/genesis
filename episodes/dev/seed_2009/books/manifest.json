@@ -1,0 +1,42 @@
+{
+  "base_currency": "USD",
+  "company": "Tundra Robotics JSC",
+  "counts": {
+    "documents": 75,
+    "fx_rates": 28,
+    "invoices": 48,
+    "ledger_rows": 463,
+    "payments": 27
+  },
+  "currency_exponents": {
+    "CNY": 2,
+    "USD": 2
+  },
+  "episode_id": "ep-rrwn6r6poubayrcl",
+  "files": [
+    "manifest.json",
+    "ledger.csv",
+    "invoices.jsonl",
+    "payments.jsonl",
+    "fx.csv",
+    "policy.json"
+  ],
+  "generator_version": "0.1.0",
+  "issue_types": [
+    "duplicate_invoice",
+    "payment_allocation",
+    "fx_conversion",
+    "period_cutoff"
+  ],
+  "money_format": "integer minor units; exponent per currency_exponents",
+  "period_end": "2026-11-30",
+  "period_start": "2026-11-01",
+  "rounding": {
+    "mode": "ROUND_HALF_UP",
+    "unit": "minor"
+  },
+  "schema_version": "1.0",
+  "time_format": "ISO-8601 with UTC offset",
+  "timezone": "America/Bogota",
+  "utc_offset": "-05:00"
+}

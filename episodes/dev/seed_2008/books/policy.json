@@ -1,0 +1,53 @@
+{
+  "allocation": {
+    "rule": "receipts are applied to invoices exactly as listed in invoice_refs",
+    "unreferenced": "receipts with null invoice_refs are held in 2400 Unapplied Customer Receipts"
+  },
+  "fx": {
+    "conversion": "convert the document amount once and round to target minor units",
+    "missing_date": "use the latest published rate on or before that date",
+    "quote": "1 unit of source_currency = rate units of target_currency",
+    "rate_date": "local date of the document in the company timezone",
+    "receipts": "AR is credited at the invoice carrying rate; the difference to cash at the receipt-date rate is booked to 7900 Realized FX Gain/Loss"
+  },
+  "issue_conventions": {
+    "duplicate_invoice": {
+      "affected_ids": "doc_id of both invoice copies",
+      "amount": "total_minor of the duplicated invoice",
+      "currency": "invoice currency",
+      "evidence": "both invoice doc_ids and one posting row_id (AR debit or revenue credit) of each copy",
+      "tolerance_minor": 0
+    },
+    "payment_allocation": {
+      "affected_ids": "doc_id of the payment",
+      "amount": "amount of that payment booked to 2400 Unapplied Customer Receipts",
+      "currency": "ledger currency",
+      "evidence": "payment doc_id and its 2400 Unapplied Customer Receipts row_id",
+      "tolerance_minor": 0
+    }
+  },
+  "ledger": {
+    "accounts": {
+      "1000 Cash at Bank": "cash",
+      "1200 Accounts Receivable": "ar",
+      "2400 Unapplied Customer Receipts": "unapplied",
+      "3000 Opening Equity": "equity",
+      "4000 Revenue": "revenue",
+      "7900 Realized FX Gain/Loss": "fx"
+    },
+    "currency": "USD",
+    "entries": "rows of one journal entry share the same timestamp",
+    "null_references": "missing references are null; links are never guessed"
+  },
+  "period": {
+    "boundary": "inclusive local dates in the company timezone",
+    "end": "2026-11-30",
+    "start": "2026-11-01",
+    "timezone": "Asia/Tokyo"
+  },
+  "rounding": {
+    "mode": "ROUND_HALF_UP",
+    "scope": "each conversion, to target minor units"
+  },
+  "schema_version": "1.0"
+}

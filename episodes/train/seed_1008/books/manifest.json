@@ -1,0 +1,43 @@
+{
+  "base_currency": "EUR",
+  "company": "Blue Ridge Logistics GmbH",
+  "counts": {
+    "documents": 63,
+    "fx_rates": 56,
+    "invoices": 38,
+    "ledger_rows": 574,
+    "payments": 25
+  },
+  "currency_exponents": {
+    "CNY": 2,
+    "EUR": 2,
+    "GBP": 2
+  },
+  "episode_id": "ep-i4vo5e4memm52gj3",
+  "files": [
+    "manifest.json",
+    "ledger.csv",
+    "invoices.jsonl",
+    "payments.jsonl",
+    "fx.csv",
+    "policy.json"
+  ],
+  "generator_version": "0.1.0",
+  "issue_types": [
+    "duplicate_invoice",
+    "payment_allocation",
+    "fx_conversion",
+    "period_cutoff"
+  ],
+  "money_format": "integer minor units; exponent per currency_exponents",
+  "period_end": "2026-11-30",
+  "period_start": "2026-11-01",
+  "rounding": {
+    "mode": "ROUND_HALF_UP",
+    "unit": "minor"
+  },
+  "schema_version": "1.0",
+  "time_format": "ISO-8601 with UTC offset",
+  "timezone": "UTC",
+  "utc_offset": "+00:00"
+}

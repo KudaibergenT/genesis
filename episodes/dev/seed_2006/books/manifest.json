@@ -1,0 +1,42 @@
+{
+  "base_currency": "EUR",
+  "company": "Cobalt Textiles BV",
+  "counts": {
+    "documents": 74,
+    "fx_rates": 30,
+    "invoices": 46,
+    "ledger_rows": 571,
+    "payments": 28
+  },
+  "currency_exponents": {
+    "CNY": 2,
+    "EUR": 2
+  },
+  "episode_id": "ep-yvkrqp2degqksyzt",
+  "files": [
+    "manifest.json",
+    "ledger.csv",
+    "invoices.jsonl",
+    "payments.jsonl",
+    "fx.csv",
+    "policy.json"
+  ],
+  "generator_version": "0.1.0",
+  "issue_types": [
+    "duplicate_invoice",
+    "payment_allocation",
+    "fx_conversion",
+    "period_cutoff"
+  ],
+  "money_format": "integer minor units; exponent per currency_exponents",
+  "period_end": "2026-10-31",
+  "period_start": "2026-10-01",
+  "rounding": {
+    "mode": "ROUND_HALF_UP",
+    "unit": "minor"
+  },
+  "schema_version": "1.0",
+  "time_format": "ISO-8601 with UTC offset",
+  "timezone": "Asia/Kolkata",
+  "utc_offset": "+05:30"
+}

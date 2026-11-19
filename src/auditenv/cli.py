@@ -15,7 +15,25 @@ from auditenv.version import GENERATOR_VERSION
 from auditenv.policies import OFFICIAL_BASELINES, POLICIES
 from auditenv.runner import run_episode, write_jsonl
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+def find_root() -> str:
+    """Project root holding configs/splits.json: $AUDITENV_ROOT, the source checkout, or the cwd upwards."""
+    env = os.environ.get("AUDITENV_ROOT")
+    candidates = [env] if env else []
+    candidates.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+    here = os.getcwd()
+    while True:
+        candidates.append(here)
+        parent = os.path.dirname(here)
+        if parent == here:
+            break
+        here = parent
+    for path in candidates:
+        if os.path.isfile(os.path.join(path, "configs", "splits.json")):
+            return path
+    raise FileNotFoundError("configs/splits.json not found; set AUDITENV_ROOT to the project root")
+
+
+ROOT = find_root()
 
 
 def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:

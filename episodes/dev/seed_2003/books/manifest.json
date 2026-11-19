@@ -1,18 +1,18 @@
 {
   "base_currency": "USD",
-  "company": "Granite Robotics LLP",
+  "company": "Blue Ridge Freight Ltd",
   "counts": {
-    "documents": 92,
-    "fx_rates": 30,
-    "invoices": 61,
-    "ledger_rows": 505,
-    "payments": 31
+    "documents": 65,
+    "fx_rates": 34,
+    "invoices": 43,
+    "ledger_rows": 561,
+    "payments": 22
   },
   "currency_exponents": {
-    "CNY": 2,
+    "EUR": 2,
     "USD": 2
   },
-  "episode_id": "ep-7bgjsefxj3jdy7ch",
+  "episode_id": "ep-ybuxer54olisuwet",
   "files": [
     "manifest.json",
     "ledger.csv",
@@ -21,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",
@@ -29,14 +29,15 @@
     "period_cutoff"
   ],
   "money_format": "integer minor units; exponent per currency_exponents",
-  "period_end": "2026-01-31",
-  "period_start": "2026-01-01",
+  "period_end": "2026-05-31",
+  "period_start": "2026-05-01",
+  "review_window_end": "2026-06-05",
   "rounding": {
     "mode": "ROUND_HALF_UP",
     "unit": "minor"
   },
   "schema_version": "1.0",
-  "time_format": "ISO-8601 with UTC offset",
-  "timezone": "Asia/Kolkata",
-  "utc_offset": "+05:30"
+  "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
+  "timezone": "Asia/Dubai",
+  "utc_offset": "+04:00"
 }

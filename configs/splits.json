@@ -4,14 +4,45 @@
   "splits": {
     "train": {
       "seeds": [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010],
-      "config": "configs/generator_v1.json",
-      "overrides": {"1001": {"errors": {"duplicate_invoice": {"count": 0}, "payment_allocation": {"count": 0}}}}
+      "config": "configs/generator_v2.json",
+      "overrides": {
+        "1001": {"max_issues": 0},
+        "1002": {"interactions": {"fx_partial_at_cutoff": {"count": 1}}},
+        "1003": {"interactions": {"allocation_with_fx": {"count": 1}}},
+        "1004": {"max_issues": 0, "company": {"timezones": ["America/Bogota"], "payment_timestamp_zones": ["UTC"]}}
+      }
     },
     "dev": {
       "seeds": [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010],
-      "config": "configs/generator_v1.json",
-      "overrides": {"2001": {"errors": {"duplicate_invoice": {"count": 0}, "payment_allocation": {"count": 0}}},
-                    "2002": {"render": {"row_order": "shuffled"}}}
+      "config": "configs/generator_v2.json",
+      "overrides": {
+        "2001": {"max_issues": 0},
+        "2002": {"render": {"row_order": "shuffled"}},
+        "2003": {"interactions": {"fx_partial_at_cutoff": {"count": 1}, "allocation_with_fx": {"count": 1}}},
+        "2004": {"max_issues": 0, "company": {"timezones": ["Asia/Kolkata"]}},
+        "2005": {"errors": {"fx_conversion": {"count": 2}, "period_cutoff": {"count": 2}}}
+      }
+    },
+    "stage2_eval": {
+      "seeds": [3001, 3002, 3003, 3004, 3005, 3006, 3007, 3008, 3009, 3010, 3011, 3012, 3013, 3014, 3015,
+                3016, 3017, 3018, 3019, 3020, 3021, 3022, 3023, 3024, 3025, 3026, 3027, 3028, 3029, 3030],
+      "config": "configs/generator_v2.json",
+      "overrides": {
+        "3001": {"max_issues": 0}, "3002": {"max_issues": 0}, "3003": {"max_issues": 0},
+        "3004": {"max_issues": 0}, "3005": {"max_issues": 0}, "3006": {"max_issues": 0},
+        "3007": {"interactions": {"fx_partial_at_cutoff": {"count": 1}, "allocation_with_fx": {"count": 1}}},
+        "3008": {"interactions": {"fx_partial_at_cutoff": {"count": 1}, "allocation_with_fx": {"count": 1}}},
+        "3009": {"interactions": {"fx_partial_at_cutoff": {"count": 1}, "allocation_with_fx": {"count": 1}}},
+        "3010": {"interactions": {"fx_partial_at_cutoff": {"count": 1}, "allocation_with_fx": {"count": 1}}},
+        "3011": {"interactions": {"fx_partial_at_cutoff": {"count": 1}, "allocation_with_fx": {"count": 1}}},
+        "3012": {"interactions": {"fx_partial_at_cutoff": {"count": 1}, "allocation_with_fx": {"count": 1}}},
+        "3013": {"errors": {"fx_conversion": {"count": 2}, "period_cutoff": {"count": 2}}},
+        "3014": {"errors": {"fx_conversion": {"count": 2}, "period_cutoff": {"count": 2}}},
+        "3015": {"errors": {"fx_conversion": {"count": 2}, "period_cutoff": {"count": 2}}},
+        "3016": {"errors": {"fx_conversion": {"count": 2}, "period_cutoff": {"count": 2}}},
+        "3017": {"errors": {"fx_conversion": {"count": 2}, "period_cutoff": {"count": 2}}},
+        "3018": {"errors": {"fx_conversion": {"count": 2}, "period_cutoff": {"count": 2}}}
+      }
     }
   }
 }

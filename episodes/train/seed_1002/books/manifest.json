@@ -1,19 +1,18 @@
 {
   "base_currency": "EUR",
-  "company": "Quartz Agro LLC",
+  "company": "Blue Ridge Optics BV",
   "counts": {
-    "documents": 93,
-    "fx_rates": 58,
-    "invoices": 59,
-    "ledger_rows": 650,
-    "payments": 34
+    "documents": 90,
+    "fx_rates": 32,
+    "invoices": 58,
+    "ledger_rows": 443,
+    "payments": 32
   },
   "currency_exponents": {
-    "EUR": 2,
-    "KWD": 3,
-    "USD": 2
+    "CNY": 2,
+    "EUR": 2
   },
-  "episode_id": "ep-5lr4dzvunazwzuls",
+  "episode_id": "ep-37qjda65i3czcvwh",
   "files": [
     "manifest.json",
     "ledger.csv",
@@ -22,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",
@@ -30,14 +29,15 @@
     "period_cutoff"
   ],
   "money_format": "integer minor units; exponent per currency_exponents",
-  "period_end": "2026-08-31",
-  "period_start": "2026-08-01",
+  "period_end": "2026-11-30",
+  "period_start": "2026-11-01",
+  "review_window_end": "2026-12-05",
   "rounding": {
     "mode": "ROUND_HALF_EVEN",
     "unit": "minor"
   },
   "schema_version": "1.0",
-  "time_format": "ISO-8601 with UTC offset",
-  "timezone": "Asia/Dubai",
-  "utc_offset": "+04:00"
+  "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
+  "timezone": "UTC",
+  "utc_offset": "+00:00"
 }

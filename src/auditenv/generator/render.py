@@ -24,6 +24,22 @@ ISSUE_CONVENTIONS = {
         "tolerance_minor": 0,
         "evidence": "payment doc_id and its 2400 Unapplied Customer Receipts row_id",
     },
+    "fx_conversion": {
+        "affected_ids": "doc_id of the document whose conversion into the ledger currency is wrong",
+        "amount": "absolute difference between the booked amount and convert(document amount, policy rate, "
+                  "policy rounding); booked amount = AR row for an invoice, cash row for a payment",
+        "currency": "ledger currency",
+        "tolerance_minor": 1,
+        "evidence": "document doc_id, the converted posting row_id (invoice: AR or revenue row; payment: cash row) "
+                    "and the policy rate as fx id 'date|source|target'",
+    },
+    "period_cutoff": {
+        "affected_ids": "doc_id of the document booked in a different period than its own local date",
+        "amount": "base amount of the mis-dated posting (invoice: AR row; payment: cash row)",
+        "currency": "ledger currency",
+        "tolerance_minor": 0,
+        "evidence": "document doc_id and the mis-dated posting row_id (invoice: AR or revenue row; payment: cash row)",
+    },
 }
 
 
@@ -73,6 +89,11 @@ def render(world: World, books: Books, lines: List[LedgerLine], cfg: Dict[str, A
     def ts(dt) -> str:
         return timeutil.iso(dt.astimezone(tz))
 
+    payment_tz = tz if world.payment_zone == "company" else timeutil.tzinfo_for("UTC")
+
+    def payment_ts(dt) -> str:
+        return timeutil.iso(dt.astimezone(payment_tz))
+
     # Business numbers: sequential by date, starting at a render-seeded base.
     first_issue: Dict[str, Any] = {}
     for inv in books.invoices:
@@ -81,8 +102,14 @@ def render(world: World, books: Books, lines: List[LedgerLine], cfg: Dict[str, A
             first_issue[inv.number_key] = inv.issued_at
     prefix = ids.rng.choice(("INV-", "SI-", "INV/", "FV-"))
     start = ids.rng.randint(100, 899)
-    for n, number in enumerate(sorted(first_issue, key=lambda k: (first_issue[k], ids.token("num", k, 12)))):
+    cn_start = ids.rng.randint(10, 89)
+    ordered = sorted(first_issue, key=lambda k: (first_issue[k], ids.token("num", k, 12)))
+    regular = [k for k in ordered if not k.startswith("num#cn")]
+    credit = [k for k in ordered if k.startswith("num#cn")]
+    for n, number in enumerate(regular):
         ids.assign(number, f"{prefix}{year}-{start + n:05d}")
+    for n, number in enumerate(credit):
+        ids.assign(number, f"CN-{year}-{cn_start + n:04d}")
     pay_prefix = ids.rng.choice(("PMT-", "RCPT-", "BR-"))
     pay_start = ids.rng.randint(1000, 8999)
     for n, pay in enumerate(sorted(books.payments, key=lambda p: (p.received_at, ids.token("pay", p.key, 12)))):
@@ -137,7 +164,7 @@ def render(world: World, books: Books, lines: List[LedgerLine], cfg: Dict[str, A
         payments.append({
             "doc_id": ids.map[pay.key],
             "payment_id": ids.map[f"pid:{pay.key}"],
-            "timestamp": ts(pay.received_at),
+            "timestamp": payment_ts(pay.received_at),
             "currency": pay.currency,
             "amount_minor": pay.amount_minor,
             "invoice_refs": refs,
@@ -180,6 +207,7 @@ def render(world: World, books: Books, lines: List[LedgerLine], cfg: Dict[str, A
         "base_currency": base,
         "period_start": world.period_start.isoformat(),
         "period_end": world.period_end.isoformat(),
+        "review_window_end": world.window_end.isoformat(),
         "timezone": world.timezone,
         "utc_offset": timeutil.iso(world.opening_at)[-6:],
         "counts": {
@@ -192,7 +220,7 @@ def render(world: World, books: Books, lines: List[LedgerLine], cfg: Dict[str, A
         "rounding": {"mode": world.rounding, "unit": "minor"},
         "currency_exponents": {c: money.EXPONENTS[c] for c in currencies},
         "money_format": "integer minor units; exponent per currency_exponents",
-        "time_format": "ISO-8601 with UTC offset",
+        "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
         "issue_types": list(ISSUE_TYPES),
         "files": ["manifest.json", "ledger.csv", "invoices.jsonl", "payments.jsonl", "fx.csv", "policy.json"],
     }
@@ -207,6 +235,9 @@ def build_policy(world: World) -> Dict[str, Any]:
             "currency": world.base_currency,
             "accounts": dict(sorted((v, k) for k, v in ACCOUNTS.items())),
             "entries": "rows of one journal entry share the same timestamp",
+            "posting_date": "documents are posted at their own timestamp: invoices at issued_at, payments at timestamp",
+            "credit_notes": "invoices with negative total_minor are credit notes (AR credit, 4100 Sales Returns debit); "
+                            "payments with negative amount_minor are refunds paid to the customer",
             "null_references": "missing references are null; links are never guessed",
         },
         "fx": {
@@ -223,6 +254,10 @@ def build_policy(world: World) -> Dict[str, Any]:
             "end": world.period_end.isoformat(),
             "timezone": world.timezone,
             "boundary": "inclusive local dates in the company timezone",
+            "assignment": "an item belongs to the period that contains the local date of its document timestamp",
+            "review_window_end": world.window_end.isoformat(),
+            "review_window": "records dated after period end up to review_window_end belong to the NEXT period and "
+                             "are included only for cut-off review",
         },
         "allocation": {
             "rule": "receipts are applied to invoices exactly as listed in invoice_refs",

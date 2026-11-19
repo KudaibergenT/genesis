@@ -7,7 +7,15 @@ from typing import Any, Dict, List, Set
 from auditenv import canon, checks, config as config_mod
 from auditenv.books import PublicBooks, write_books
 from auditenv.generator.ledger import build_ledger
-from auditenv.generator.operators import InternalIssue, inject_duplicate_invoices, inject_payment_allocation
+from auditenv.generator.operators import (
+    InternalIssue,
+    inject_allocation_with_fx,
+    inject_duplicate_invoices,
+    inject_fx_conversion,
+    inject_fx_partial_at_cutoff,
+    inject_payment_allocation,
+    inject_period_cutoff,
+)
 from auditenv.generator.render import render
 from auditenv.generator.world import build_world
 from auditenv.rng import Rng, resolve_range
@@ -16,6 +24,16 @@ from auditenv.version import GENERATOR_VERSION, SCHEMA_VERSION
 
 class GenerationError(RuntimeError):
     pass
+
+
+def _jsonable(obj: Any) -> Any:
+    if isinstance(obj, dict):
+        return {k: _jsonable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_jsonable(v) for v in obj]
+    if hasattr(obj, "isoformat"):
+        return obj.isoformat()
+    return obj
 
 
 @dataclass
@@ -50,14 +68,40 @@ def generate_episode(seed: int, config: Any = None) -> Episode:
     issues: List[InternalIssue] = []
     used: Set[str] = set()
     errors = cfg["errors"]
-    dup_spec = errors["duplicate_invoice"]
-    rng = Rng("errors", seed, world_hash, "duplicate_invoice", canon.dumps(dup_spec))
-    issues += inject_duplicate_invoices(world, books, rng, resolve_range(dup_spec["count"], rng),
-                                        dup_spec["variants"], alloc, used)
-    alloc_spec = errors["payment_allocation"]
-    rng = Rng("errors", seed, world_hash, "payment_allocation", canon.dumps(alloc_spec))
-    issues += inject_payment_allocation(world, books, rng, resolve_range(alloc_spec["count"], rng),
-                                        alloc_spec["variants"], used)
+
+    def stream(name: str, spec: Any) -> Rng:
+        return Rng("errors", seed, world_hash, name, canon.dumps(spec))
+
+    # Counts come from independent streams; the issue budget is then spent in a fixed order.
+    inter = cfg["interactions"]
+    plan = []
+    for name in ("fx_partial_at_cutoff", "allocation_with_fx"):
+        rng = stream(name, inter[name])
+        plan.append((name, rng, resolve_range(inter[name]["count"], rng), 2))
+    for name in ("duplicate_invoice", "payment_allocation", "fx_conversion", "period_cutoff"):
+        rng = stream(name, errors[name])
+        plan.append((name, rng, resolve_range(errors[name]["count"], rng), 1))
+    budget = cfg["max_issues"]
+    requested = {}
+    for name, rng, count, per_issue in plan:
+        granted = min(count, budget // per_issue)
+        budget -= granted * per_issue
+        requested[name] = {"requested": count, "granted": granted}
+        before = len(issues)
+        if name == "fx_partial_at_cutoff":
+            issues += inject_fx_partial_at_cutoff(world, books, rng, granted, alloc, used)
+        elif name == "allocation_with_fx":
+            variants = list(errors["payment_allocation"]["variants"]) or ["missing", "partial"]
+            issues += inject_allocation_with_fx(world, books, rng, granted, variants, used)
+        elif name == "duplicate_invoice":
+            issues += inject_duplicate_invoices(world, books, rng, granted, errors[name]["variants"], alloc, used)
+        elif name == "payment_allocation":
+            issues += inject_payment_allocation(world, books, rng, granted, errors[name]["variants"], used)
+        elif name == "fx_conversion":
+            issues += inject_fx_conversion(world, books, rng, granted, errors[name]["variants"], used)
+        else:
+            issues += inject_period_cutoff(world, books, rng, granted, errors[name]["variants"], alloc, used)
+        requested[name]["injected"] = (len(issues) - before) // per_issue
 
     lines = build_ledger(world, books)
     line_by_key = {ln.key: ln for ln in lines}
@@ -69,16 +113,22 @@ def generate_episode(seed: int, config: Any = None) -> Episode:
     public, ids = render(world, books, lines, cfg, world_hash)
     episode_id = public.manifest["episode_id"]
 
+    def surface(key: str) -> str:
+        return key[3:] if key.startswith("fx:") else ids.map[key]
+
+    def issue_id(key: str) -> str:
+        return "ISS-" + ids.token("issue", key, 8)
+
     truth_issues = []
     for issue in issues:
         truth_issues.append({
-            "issue_id": "ISS-" + ids.token("issue", issue.key, 8),
+            "issue_id": issue_id(issue.key),
             "type": issue.type,
-            "affected_ids": sorted(ids.map[k] for k in issue.affected),
+            "affected_ids": sorted(surface(k) for k in issue.affected),
             "expected_amount_minor": issue.amount_minor,
             "currency": issue.currency,
             "tolerance_minor": issue.tolerance_minor,
-            "evidence_sets": sorted(sorted(ids.map[k] for k in ev) for ev in issue.evidence_sets),
+            "evidence_sets": sorted(sorted(surface(k) for k in ev) for ev in issue.evidence_sets),
         })
     truth_issues.sort(key=lambda i: (i["type"], i["affected_ids"]))
     truth = {"schema_version": SCHEMA_VERSION, "episode_id": episode_id, "issues": truth_issues}
@@ -92,13 +142,19 @@ def generate_episode(seed: int, config: Any = None) -> Episode:
         "config_hash": config_mod.config_hash(cfg),
         "world_config_hash": world_hash,
         "world": world_summary,
+        "issue_budget": {"max_issues": cfg["max_issues"], "per_operator": requested,
+                         "injected": len(issues)},
         "mutations": [
             {
                 "operator": i.type,
                 "variant": i.variant,
                 "issue_key": i.key,
-                "issue_id": "ISS-" + ids.token("issue", i.key, 8),
-                "params": i.params,
+                "issue_id": issue_id(i.key),
+                "scenario": i.params.get("scenario"),
+                "linked_issue_id": issue_id(i.params["linked_issue"]) if "linked_issue" in i.params else None,
+                "affected": list(i.affected),
+                "affected_ids": sorted(surface(k) for k in i.affected),
+                "params": _jsonable(i.params),
             }
             for i in issues
         ],

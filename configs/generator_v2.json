@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "errors": {
+    "duplicate_invoice": {"count": [0, 2], "variants": ["same_number", "new_number"]},
+    "payment_allocation": {"count": [0, 2], "variants": ["missing", "partial"]},
+    "fx_conversion": {"count": [0, 2], "variants": ["invoice_wrong_date", "invoice_wrong_rate", "invoice_wrong_scale",
+                                                    "receipt_wrong_date", "receipt_wrong_rate"]},
+    "period_cutoff": {"count": [0, 2], "variants": ["early", "late", "tz_shift", "receipt_early"]}
+  },
+  "interactions": {
+    "fx_partial_at_cutoff": {"count": [0, 1]},
+    "allocation_with_fx": {"count": [0, 1]}
+  },
+  "max_issues": 12
+}

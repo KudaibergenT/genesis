@@ -8,7 +8,7 @@ from auditenv.books import books_files, load_books
 from auditenv.config import ConfigError, resolve
 from auditenv.generator import generate_episode, write_episode
 
-from conftest import CLEAN_CONFIG, episode
+from conftest import CLEAN_CONFIG, episode, only
 
 SEEDS = range(60)
 INTERNAL_KEY_PATTERN = re.compile(r"(inv#|pay#|cust#|num#|bg#|E:|issue:|pid:)")
@@ -62,8 +62,8 @@ def test_different_seeds_give_different_books():
 
 
 def test_error_types_are_independently_configurable():
-    only_dup = {"errors": {"duplicate_invoice": {"count": 2}, "payment_allocation": {"count": 0}}}
-    only_alloc = {"errors": {"duplicate_invoice": {"count": 0}, "payment_allocation": {"count": 2}}}
+    only_dup = only(duplicate_invoice=2)
+    only_alloc = only(payment_allocation=2)
     for seed in range(10):
         assert collections.Counter(i["type"] for i in episode(seed, only_dup).truth["issues"]) == {"duplicate_invoice": 2}
         assert collections.Counter(i["type"] for i in episode(seed, only_alloc).truth["issues"]) == {"payment_allocation": 2}
@@ -143,7 +143,7 @@ def test_timestamps_have_offsets_and_money_is_integer():
 
 @pytest.mark.parametrize("bad", [
     {"nope": 1},
-    {"errors": {"fx_conversion": {"count": 1}}},
+    {"errors": {"fx_conversion": {"count": 1, "variants": ["typo"]}}},
     {"errors": {"duplicate_invoice": {"count": 13}}},
     {"errors": {"duplicate_invoice": {"count": [7, 7]}, "payment_allocation": {"count": [6, 6]}}},
     {"render": {"row_order": "random"}},

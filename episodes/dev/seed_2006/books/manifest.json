@@ -1,18 +1,18 @@
 {
-  "base_currency": "EUR",
-  "company": "Cobalt Textiles BV",
+  "base_currency": "KZT",
+  "company": "Orchard Logistics JSC",
   "counts": {
-    "documents": 74,
-    "fx_rates": 30,
-    "invoices": 46,
-    "ledger_rows": 571,
-    "payments": 28
+    "documents": 61,
+    "fx_rates": 34,
+    "invoices": 38,
+    "ledger_rows": 459,
+    "payments": 23
   },
   "currency_exponents": {
-    "CNY": 2,
-    "EUR": 2
+    "GBP": 2,
+    "KZT": 2
   },
-  "episode_id": "ep-yvkrqp2degqksyzt",
+  "episode_id": "ep-vbzgkyhmy3gi3vyu",
   "files": [
     "manifest.json",
     "ledger.csv",
@@ -21,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",
@@ -29,14 +29,15 @@
     "period_cutoff"
   ],
   "money_format": "integer minor units; exponent per currency_exponents",
-  "period_end": "2026-10-31",
-  "period_start": "2026-10-01",
+  "period_end": "2026-05-31",
+  "period_start": "2026-05-01",
+  "review_window_end": "2026-06-05",
   "rounding": {
     "mode": "ROUND_HALF_UP",
     "unit": "minor"
   },
   "schema_version": "1.0",
-  "time_format": "ISO-8601 with UTC offset",
-  "timezone": "Asia/Kolkata",
-  "utc_offset": "+05:30"
+  "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
+  "timezone": "UTC",
+  "utc_offset": "+00:00"
 }

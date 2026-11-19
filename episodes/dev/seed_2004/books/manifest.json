@@ -1,19 +1,18 @@
 {
-  "base_currency": "KZT",
-  "company": "Saffron Foods LLC",
+  "base_currency": "USD",
+  "company": "Verdant Clinics LLC",
   "counts": {
-    "documents": 55,
-    "fx_rates": 60,
-    "invoices": 34,
-    "ledger_rows": 471,
-    "payments": 21
+    "documents": 71,
+    "fx_rates": 31,
+    "invoices": 42,
+    "ledger_rows": 449,
+    "payments": 29
   },
   "currency_exponents": {
-    "EUR": 2,
-    "KZT": 2,
+    "KWD": 3,
     "USD": 2
   },
-  "episode_id": "ep-t76aon6iaqu6nzu7",
+  "episode_id": "ep-no7e3hv6tecihnoy",
   "files": [
     "manifest.json",
     "ledger.csv",
@@ -22,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",
@@ -30,14 +29,15 @@
     "period_cutoff"
   ],
   "money_format": "integer minor units; exponent per currency_exponents",
-  "period_end": "2026-01-31",
-  "period_start": "2026-01-01",
+  "period_end": "2026-09-30",
+  "period_start": "2026-09-01",
+  "review_window_end": "2026-10-05",
   "rounding": {
     "mode": "ROUND_HALF_EVEN",
     "unit": "minor"
   },
   "schema_version": "1.0",
-  "time_format": "ISO-8601 with UTC offset",
-  "timezone": "Asia/Almaty",
-  "utc_offset": "+05:00"
+  "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
+  "timezone": "Asia/Kolkata",
+  "utc_offset": "+05:30"
 }

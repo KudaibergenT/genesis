@@ -1,19 +1,18 @@
 {
   "base_currency": "USD",
-  "company": "Basalt Build JSC",
+  "company": "Silverline Build Ltd",
   "counts": {
-    "documents": 76,
-    "fx_rates": 58,
-    "invoices": 46,
-    "ledger_rows": 624,
-    "payments": 30
+    "documents": 121,
+    "fx_rates": 34,
+    "invoices": 71,
+    "ledger_rows": 703,
+    "payments": 50
   },
   "currency_exponents": {
-    "GBP": 2,
-    "KWD": 3,
+    "CNY": 2,
     "USD": 2
   },
-  "episode_id": "ep-6eyhzvaoyuwkcuyx",
+  "episode_id": "ep-r2kf4qe37rkm2r4j",
   "files": [
     "manifest.json",
     "ledger.csv",
@@ -22,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",
@@ -30,14 +29,15 @@
     "period_cutoff"
   ],
   "money_format": "integer minor units; exponent per currency_exponents",
-  "period_end": "2026-12-31",
-  "period_start": "2026-12-01",
+  "period_end": "2026-10-31",
+  "period_start": "2026-10-01",
+  "review_window_end": "2026-11-05",
   "rounding": {
-    "mode": "ROUND_HALF_UP",
+    "mode": "ROUND_HALF_EVEN",
     "unit": "minor"
   },
   "schema_version": "1.0",
-  "time_format": "ISO-8601 with UTC offset",
-  "timezone": "Asia/Almaty",
-  "utc_offset": "+05:00"
+  "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
+  "timezone": "Asia/Kolkata",
+  "utc_offset": "+05:30"
 }

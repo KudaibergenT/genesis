@@ -83,13 +83,23 @@ def test_flagging_everything_scores_badly(ep):
 
 
 def test_flagging_everything_around_the_truth_still_loses(ep):
+    """30 findings that contain every true issue. The official formula gives
+    (3k - 30)/(30 + k): negative for k <= 9, zero at k = 10 and positive for k = 11-12
+    (a documented limitation of the specification, see docs/reward_analysis.md). It is
+    always strictly worse than the honest answer."""
     truth = correct(ep.truth)
+    k = len(truth)
     padding = []
     for doc in ep.public.invoices:
         padding.append({"type": "duplicate_invoice", "affected_ids": [doc["doc_id"]], "claimed_amount_minor": doc["total_minor"],
                         "currency": doc["currency"], "evidence_ids": [doc["doc_id"]], "explanation": ""})
-    g = grade(ep, (truth + padding)[:30])
-    assert g.reward < 0 < grade(ep, truth, steps=60).reward
+    findings = (truth + padding)[:30]
+    g = grade(ep, findings)
+    assert g.metrics["tp"] == k and g.metrics["fp"] == 30 - k
+    assert g.reward == pytest.approx(float(official_reward(Fraction(2 * k, 30 + k), 0)))
+    assert g.reward < grade(ep, truth).reward and g.reward < grade(ep, truth[:-1]).reward
+    if k <= 9:
+        assert g.reward < 0 < grade(ep, truth, steps=60).reward
 
 
 def test_step_savings_only_slightly_separate_equal_answers(ep):
@@ -127,7 +137,7 @@ def test_evidence_ids_that_do_not_exist_do_not_help(ep):
 def test_wrong_currency_and_amount_are_rejected(ep):
     f = correct(ep.truth)
     f[0]["currency"] = "XXX" if f[0]["currency"] != "XXX" else "USD"
-    f[1]["claimed_amount_minor"] += 1
+    f[1]["claimed_amount_minor"] += ep.truth["issues"][1]["tolerance_minor"] + 1
     g = grade(ep, f)
     assert [d["reason"] for d in g.details["findings"][:2]] == ["currency", "amount"]
 

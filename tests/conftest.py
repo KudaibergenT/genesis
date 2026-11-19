@@ -5,7 +5,14 @@ import pytest
 from auditenv.generator import generate_episode
 
 SEEDS_BOTH_TYPES = (2, 3, 7, 8)
-CLEAN_CONFIG = {"errors": {"duplicate_invoice": {"count": 0}, "payment_allocation": {"count": 0}}}
+ALL_TYPES = ("duplicate_invoice", "payment_allocation", "fx_conversion", "period_cutoff")
+NO_INTERACTIONS = {"fx_partial_at_cutoff": {"count": 0}, "allocation_with_fx": {"count": 0}}
+CLEAN_CONFIG = {"errors": {t: {"count": 0} for t in ALL_TYPES}, "interactions": NO_INTERACTIONS}
+
+
+def only(**counts):
+    """Config that injects exactly the given per-type counts and nothing else."""
+    return {"errors": {t: {"count": counts.get(t, 0)} for t in ALL_TYPES}, "interactions": NO_INTERACTIONS}
 
 
 @functools.lru_cache(maxsize=None)

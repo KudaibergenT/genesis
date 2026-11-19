@@ -1,19 +1,18 @@
 {
-  "base_currency": "USD",
-  "company": "Orchard Studios LLP",
+  "base_currency": "EUR",
+  "company": "Orchard Foods LLP",
   "counts": {
-    "documents": 81,
-    "fx_rates": 58,
-    "invoices": 53,
-    "ledger_rows": 644,
-    "payments": 28
+    "documents": 72,
+    "fx_rates": 31,
+    "invoices": 40,
+    "ledger_rows": 398,
+    "payments": 32
   },
   "currency_exponents": {
-    "CNY": 2,
-    "KWD": 3,
-    "USD": 2
+    "EUR": 2,
+    "GBP": 2
   },
-  "episode_id": "ep-lpzg6l4svv54s77q",
+  "episode_id": "ep-fv7pf42wxpekbzpv",
   "files": [
     "manifest.json",
     "ledger.csv",
@@ -22,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",
@@ -30,14 +29,15 @@
     "period_cutoff"
   ],
   "money_format": "integer minor units; exponent per currency_exponents",
-  "period_end": "2026-05-31",
-  "period_start": "2026-05-01",
+  "period_end": "2026-06-30",
+  "period_start": "2026-06-01",
+  "review_window_end": "2026-07-05",
   "rounding": {
-    "mode": "ROUND_HALF_EVEN",
+    "mode": "ROUND_HALF_UP",
     "unit": "minor"
   },
   "schema_version": "1.0",
-  "time_format": "ISO-8601 with UTC offset",
-  "timezone": "Asia/Tokyo",
-  "utc_offset": "+09:00"
+  "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
+  "timezone": "UTC",
+  "utc_offset": "+00:00"
 }

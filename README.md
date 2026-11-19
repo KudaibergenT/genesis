@@ -4,9 +4,10 @@
 расследования, скрытые причинно внесённые ошибки и терминальная награда. Python 3.11,
 только стандартная библиотека, без сети, GPU и платных API.
 
-Статус: **этап 1** — контракт среды и два типа ошибок (`duplicate_invoice`,
-`payment_allocation`). `fx_conversion` и `period_cutoff` описаны в схемах и принимаются
-в ответах, но генератор их пока не вносит (этап 2).
+Статус: **этап 2**. Реализованы четыре типа ошибок (`duplicate_invoice`, `payment_allocation`,
+`fx_conversion`, `period_cutoff`), два сценария взаимодействующих ошибок (`fx_partial_at_cutoff`,
+`allocation_with_fx`), чистые компании и отвлекающие случаи. Изоляция агента в отдельном процессе и
+Docker — этап 3.
 
 ## Быстрый старт
 
@@ -14,8 +15,22 @@
 make venv        # Python 3.11 venv + pytest/hypothesis (только для тестов)
 make test        # весь набор тестов
 make generate    # 10 train + 10 dev эпизодов в episodes/
-make baselines   # базовые политики, траектории и итоги в trajectories/
+make baselines   # базовые политики, траектории и итоги в trajectories/ (train+dev и stage2_eval)
+make audit       # аудит данных → docs/data_audit.md
+make reward-analysis  # анализ награды для k = 0..12 → docs/reward_analysis.md
+make verify      # test + audit + baselines
 ```
+
+Набор `stage2_eval` — 30 эпизодов: 6 чистых, 6 с обоими сценариями взаимодействия, 6 с
+принудительными FX/cut-off, остальные по умолчанию.
+
+Число ошибок в эпизоде — от 0 до 12 по ТЗ (`max_issues`, по умолчанию 12). Чистая компания:
+`config={"max_issues": 0}`. Конфигурация по умолчанию — `configs/generator_v2.json`.
+
+Официальная формула награды не изменялась. При k ≥ 10 она допускает награду ≥ 0 для ответа из 30
+выводов, содержащего всю правду; это ограничение спецификации разобрано в
+[docs/reward_analysis.md](docs/reward_analysis.md). Реальная атака `flag_everything` получает −1 при
+любом k.
 
 Без make: `PYTHONPATH=src python3.11 -m auditenv --help`.
 
@@ -62,17 +77,23 @@ trajectories/  trajectories_<policy>.jsonl, results_<policy>.jsonl, summary.json
 Подробности и принятые трактовки ТЗ — в [docs/design_note.md](docs/design_note.md),
 вопросы организаторам — в [docs/open_questions.md](docs/open_questions.md).
 
-## Базовые политики (train + dev, 20 эпизодов, режим eval)
+## Базовые политики (режим eval)
 
-| policy | return | F1 | шаги |
-|---|---|---|---|
-| oracle (только на стороне оценщика) | 1.000 | 1.000 | 1 |
-| reference_solver (только через инструменты) | 0.969 | 1.000 | 16.5 |
-| simple_reconciler | −0.519 | 0.251 | 15.1 |
-| silence | −0.500 | 0.250 | 1 |
-| random_explorer | −0.703 | 0.150 | 19.8 |
-| flag_everything | −1.000 | 0.000 | 3 |
+P, R, F1 — micro по сумме TP/FP/FN всех эпизодов; return — средняя официальная награда;
+inspection steps — шаги до submit.
 
-Средние P и R занижены чистыми эпизодами: по ТЗ при нулевом знаменателе P = R = 0, хотя F1 = 1.
+**stage2_eval, 30 эпизодов** (`trajectories/summary_stage2_eval.json`):
+
+| policy | P | R | F1 | return | inspection steps |
+|---|---|---|---|---|---|
+| oracle (только на стороне оценщика) | 1.000 | 1.000 | 1.000 | 1.000 | 0.0 |
+| reference_solver (только через инструменты) | 1.000 | 1.000 | 1.000 | 0.969 | 15.5 |
+| simple_reconciler | 0.191 | 0.789 | 0.307 | −0.469 | 15.5 |
+| silence | 0.000 | 0.000 | 0.000 | −0.600 | 0.0 |
+| random_explorer | 0.000 | 0.000 | 0.000 | −0.934 | 22.9 |
+| flag_everything | 0.000 | 0.000 | 0.000 | −1.000 | 2.0 |
+
+**train + dev, 20 эпизодов** (`trajectories/summary.json`): oracle 1.000, reference_solver 0.971,
+simple_reconciler −0.515, silence −0.600, random_explorer −0.801, flag_everything −1.000.
 
 Все компании, люди и суммы вымышлены. Это программная задача, а не аудиторское заключение.

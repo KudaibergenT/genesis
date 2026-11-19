@@ -1,4 +1,9 @@
-"""Clean company history: world, documents-as-events, background activity."""
+"""Clean company history: world, documents-as-events, background activity.
+
+Besides the reporting period the history covers a review window of a few days after
+period_end (next period). Window items are correct next-period activity; they exist so
+cut-off can be tested from both sides of the boundary.
+"""
 
 from datetime import date, datetime, time, timedelta
 from decimal import ROUND_HALF_EVEN, Context, Decimal
@@ -83,6 +88,11 @@ def _business_time(rng: Rng, day: date, tz) -> datetime:
     return datetime.combine(day, time(rng.randint(9, 17), rng.randint(0, 59), rng.randint(0, 59)), tz)
 
 
+def _time_between(rng: Rng, day: date, tz, start_minute: int, end_minute: int) -> datetime:
+    minute = rng.randint(start_minute, end_minute)
+    return datetime.combine(day, time(minute // 60, minute % 60, rng.randint(0, 59)), tz)
+
+
 def _days(start: date, end: date) -> List[date]:
     return [start + timedelta(days=i) for i in range((end - start).days + 1)]
 
@@ -109,8 +119,10 @@ def build_world(seed: int, cfg: Dict[str, Any], world_hash: str) -> Tuple[World,
     month = resolve_range(company["months"], rng)
     period_start = date(year, month, 1)
     period_end = date(year, month, days_in_month(year, month))
+    window_end = period_end + timedelta(days=company["review_window_days"])
     base = rng.choice(company["base_currencies"])
     zone = rng.choice(company["timezones"])
+    payment_zone = rng.choice(company["payment_timestamp_zones"])
     rounding = rng.choice(cfg["rounding_modes"])
     pool = [c for c in cfg["currencies"]["foreign_pool"] if c != base]
     n_foreign = min(resolve_range(cfg["currencies"]["foreign_count"], rng), len(pool))
@@ -120,20 +132,28 @@ def build_world(seed: int, cfg: Dict[str, Any], world_hash: str) -> Tuple[World,
     company_name = f"{names_rng.choice(NAME_A)} {names_rng.choice(NAME_B)} {names_rng.choice(NAME_SUFFIX)}"
     n_customers = resolve_range(cfg["size"]["customers"], rng)
     used_names = {company_name}
+    currencies: List[str] = []
+    for _ in range(n_customers):
+        currency = base
+        if foreign and rng.chance(cfg["currencies"]["foreign_customer_per_mille"]):
+            currency = rng.choice(foreign)
+        currencies.append(currency)
+    # Multi-currency companies always have some foreign-currency customers.
+    if foreign and cfg["currencies"]["foreign_customer_per_mille"] > 0:
+        for i in range(min(2, n_customers - 1)):
+            if currencies[i] == base:
+                currencies[i] = foreign[i % len(foreign)]
     customers: Dict[str, Customer] = {}
-    for i in range(n_customers):
+    for i, currency in enumerate(currencies):
         while True:
             name = f"{names_rng.choice(NAME_A)} {names_rng.choice(NAME_B)} {names_rng.choice(NAME_SUFFIX)}"
             if name not in used_names:
                 used_names.add(name)
                 break
-        currency = base
-        if foreign and rng.chance(cfg["currencies"]["foreign_customer_per_mille"]):
-            currency = rng.choice(foreign)
         customers[f"cust#{i}"] = Customer(key=f"cust#{i}", name=name, currency=currency)
 
     tz = tzinfo_for(zone)
-    fx =_build_fx(rng.child("fx"), base, foreign, period_start - timedelta(days=10), period_end)
+    fx = _build_fx(rng.child("fx"), base, foreign, period_start - timedelta(days=10), window_end)
     opening_at = datetime.combine(period_start, time(0, 0, 0), tz)
     alloc = TimeAllocator()
     alloc.take(opening_at)
@@ -151,22 +171,31 @@ def build_world(seed: int, cfg: Dict[str, Any], world_hash: str) -> Tuple[World,
         fx=fx,
         opening_at=opening_at,
         opening_cash_minor=0,
+        window_end=window_end,
+        payment_zone=payment_zone,
     )
 
     invoices = _build_invoices(rng.child("invoices"), world, cfg, alloc)
     payments = _build_payments(rng.child("payments"), world, cfg, invoices, alloc)
+    if cfg["distractors"]["refunds"]:
+        credit_notes, refunds = _build_refunds(rng.child("refunds"), world, invoices, payments, alloc)
+        invoices += credit_notes
+        payments += refunds
     background = _build_background(rng.child("background"), world, cfg, alloc)
     expenses = sum(b.amount_minor for b in background)
     world.opening_cash_minor = int(_sig_round(Decimal(expenses * 3 // 2 + 1), 3))
 
     summary = {
         "period": [period_start.isoformat(), period_end.isoformat()],
+        "review_window_end": window_end.isoformat(),
         "base_currency": base,
         "timezone": zone,
+        "payment_timestamp_zone": payment_zone,
         "rounding": rounding,
         "foreign_currencies": list(foreign),
         "customers": n_customers,
         "invoices": len(invoices),
+        "credit_notes": sum(1 for i in invoices if i.kind == "credit_note"),
         "payments": len(payments),
         "background_entries": len(background),
     }
@@ -180,12 +209,21 @@ def _price(rng: Rng, currency: str) -> int:
     return _to_minor(rng.choice(NICE_USD_CENTS), currency, rng.choice((2, 2, 3)))
 
 
+def _one_off_lines(rng: Rng, currency: str, order_ref: str) -> Tuple[Line, ...]:
+    lines = []
+    for _ in range(rng.weighted(((1, 50), (2, 30), (3, 15), (4, 5)))):
+        qty = rng.weighted(((1, 60), (2, 15), (3, 10), (5, 8), (10, 7)))
+        lines.append(Line(rng.choice(ONE_OFF_ITEMS), None, order_ref, qty, _price(rng, currency)))
+    return tuple(lines)
+
+
 def _build_invoices(rng: Rng, world: World, cfg: Dict[str, Any], alloc: TimeAllocator) -> List[Invoice]:
     target = resolve_range(cfg["size"]["invoices"], rng)
     customer_keys = sorted(world.customers)
     period_days = _days(world.period_start, world.period_end)
+    window_days = _days(world.period_end + timedelta(days=1), world.window_end)
     tz = world.tz
-    specs: List[Tuple[str, date, Tuple[Line, ...]]] = []
+    specs: List[Tuple[str, datetime, Tuple[Line, ...]]] = []
 
     if cfg["distractors"]["weekly_subscriptions"]:
         mondays = [d for d in period_days if d.weekday() == 0]
@@ -196,29 +234,43 @@ def _build_invoices(rng: Rng, world: World, cfg: Dict[str, Any], alloc: TimeAllo
             for monday in mondays:
                 iso = monday.isocalendar()
                 line = Line(item, f"{iso[0]}-W{iso[1]:02d}", None, 1, price)
-                specs.append((cust, monday, (line,)))
+                specs.append((cust, _business_time(rng, monday, tz), (line,)))
 
     month_tag = f"{world.period_start.year}-{world.period_start.month:02d}"
     for cust in rng.sample(customer_keys, max(1, len(customer_keys) // 3)):
         currency = world.customers[cust].currency
         line = Line(rng.choice(MONTHLY_ITEMS), month_tag, None, 1, _price(rng, currency))
-        specs.append((cust, rng.choice(period_days[:10]), (line,)))
+        specs.append((cust, _business_time(rng, rng.choice(period_days[:10]), tz), (line,)))
 
-    order_numbers = rng.sample(range(10000, 99999), max(target, 1) * 2)
-    order_iter = iter(order_numbers)
-    while len(specs) < target:
+    order_numbers = iter(rng.sample(range(10000, 99999), max(target, 1) * 2 + 20))
+
+    def one_off(when: datetime) -> None:
         cust = rng.choice(customer_keys)
-        currency = world.customers[cust].currency
-        order_ref = f"PO-{next(order_iter)}"
-        lines = []
-        for _ in range(rng.weighted(((1, 50), (2, 30), (3, 15), (4, 5)))):
-            qty = rng.weighted(((1, 60), (2, 15), (3, 10), (5, 8), (10, 7)))
-            lines.append(Line(rng.choice(ONE_OFF_ITEMS), None, order_ref, qty, _price(rng, currency)))
-        specs.append((cust, rng.choice(period_days), tuple(lines)))
+        specs.append((cust, when, _one_off_lines(rng, world.customers[cust].currency, f"PO-{next(order_numbers)}")))
+
+    while len(specs) < target:
+        one_off(_business_time(rng, rng.choice(period_days), tz))
+    foreign_customers = [c for c in customer_keys if world.customers[c].currency != world.base_currency]
+    early_days = period_days[: max(1, len(period_days) - 6)]
+    early_foreign = sum(1 for cust, when, _ in specs
+                        if cust in foreign_customers and world.local_date(when) in early_days)
+    for _ in range(max(0, 6 - early_foreign) if foreign_customers else 0):
+        cust = rng.choice(foreign_customers)
+        when = _business_time(rng, rng.choice(early_days), tz)
+        specs.append((cust, when, _one_off_lines(rng, world.customers[cust].currency, f"PO-{next(order_numbers)}")))
+    if cfg["distractors"]["boundary_documents"]:
+        # Late on the last day (current period) and just after local midnight (next period):
+        # these dates differ between local time and UTC, so periods must be judged locally.
+        for _ in range(rng.randint(1, 2)):
+            one_off(_time_between(rng, world.period_end, tz, 19 * 60, 23 * 60 + 40))
+        for _ in range(rng.randint(1, 2)):
+            one_off(_time_between(rng, world.period_end + timedelta(days=1), tz, 5, 4 * 60 + 30))
+    for _ in range(rng.randint(2, 4)):
+        one_off(_business_time(rng, rng.choice(window_days), tz))
 
     invoices = []
-    for i, (cust, day, lines) in enumerate(specs):
-        issued = alloc.take(_business_time(rng, day, tz))
+    for i, (cust, when, lines) in enumerate(specs):
+        issued = alloc.take(when)
         terms = rng.choice((7, 14, 30, 30, 45))
         invoices.append(
             Invoice(
@@ -251,7 +303,7 @@ def _build_payments(rng: Rng, world: World, cfg: Dict[str, Any], invoices: List[
 
     def pay_day(after: date, lo: int, hi: int) -> Optional[date]:
         day = after + timedelta(days=rng.randint(lo, hi))
-        return day if day <= world.period_end else None
+        return day if day <= world.window_end else None
 
     behaviours = [("full", 560), ("unpaid", 220)]
     if d["split_payments"]:
@@ -259,11 +311,25 @@ def _build_payments(rng: Rng, world: World, cfg: Dict[str, Any], invoices: List[
     if d["partial_payments"]:
         behaviours.append(("partial", 90))
 
+    # A multi-currency company always has some foreign-currency receivables still open and
+    # some settled within the period.
+    early_foreign = [inv.key for inv in sorted(invoices, key=lambda x: (x.issued_at, x.key))
+                     if inv.currency != world.base_currency and world.in_period(inv.issued_at)
+                     and world.local_date(inv.issued_at) <= world.period_end - timedelta(days=6)]
+    rng.shuffle(early_foreign)
+    forced_kind = {key: "unpaid" for key in early_foreign[:2]}
+    forced_kind.update({key: "full_in_period" for key in early_foreign[2:4]})
+
     for inv in sorted(invoices, key=lambda x: (x.issued_at, x.key)):
+        if not world.in_period(inv.issued_at):
+            continue
         issue_day = world.local_date(inv.issued_at)
         total = inv.total_minor
-        kind = rng.weighted(behaviours)
-        if kind == "full":
+        kind = forced_kind.get(inv.key) or rng.weighted(behaviours)
+        if kind == "full_in_period":
+            day = min(issue_day + timedelta(days=rng.randint(1, 5)), world.period_end)
+            raw.append((inv.customer_key, day, inv.currency, [Allocation(inv.key, total)]))
+        elif kind == "full":
             day = pay_day(issue_day, 1, 20)
             if day:
                 raw.append((inv.customer_key, day, inv.currency, [Allocation(inv.key, total)]))
@@ -333,9 +399,60 @@ def _build_payments(rng: Rng, world: World, cfg: Dict[str, Any], invoices: List[
     return payments
 
 
+def _build_refunds(rng: Rng, world: World, invoices: List[Invoice], payments: List[Payment],
+                   alloc: TimeAllocator) -> Tuple[List[Invoice], List[Payment]]:
+    """Returns: a credit note against a fully paid invoice, refunded to the customer in cash."""
+    paid: Dict[str, int] = {}
+    last_paid: Dict[str, date] = {}
+    for pay in payments:
+        for a in pay.allocations or ():
+            paid[a.invoice_key] = paid.get(a.invoice_key, 0) + a.amount_minor
+            day = world.local_date(pay.received_at)
+            last_paid[a.invoice_key] = max(last_paid.get(a.invoice_key, day), day)
+    cutoff = world.period_end - timedelta(days=4)
+    candidates = sorted(
+        (inv for inv in invoices
+         if paid.get(inv.key) == inv.total_minor and last_paid[inv.key] <= cutoff
+         and any(line.order_ref for line in inv.lines)),
+        key=lambda inv: inv.key,
+    )
+    credit_notes: List[Invoice] = []
+    refunds: List[Payment] = []
+    for j, orig in enumerate(rng.sample(candidates, min(len(candidates), rng.randint(1, 2)))):
+        line = rng.choice([ln for ln in orig.lines if ln.order_ref])
+        returned = rng.randint(1, line.quantity)
+        credit_line = Line(f"Credit note: returned {line.description}", line.service_period, line.order_ref,
+                           -returned, line.unit_price_minor)
+        cn_day = min(last_paid[orig.key] + timedelta(days=rng.randint(1, 3)), world.period_end)
+        cn_at = alloc.take(_business_time(rng, cn_day, world.tz))
+        cn = Invoice(
+            key=f"inv#cn{j}",
+            number_key=f"num#cn{j}",
+            customer_key=orig.customer_key,
+            issued_at=cn_at,
+            due_at=cn_at + timedelta(days=14),
+            currency=orig.currency,
+            lines=(credit_line,),
+            kind="credit_note",
+        )
+        credit_notes.append(cn)
+        refund_day = min(cn_day + timedelta(days=rng.randint(1, 5)), world.window_end)
+        refunds.append(
+            Payment(
+                key=f"pay#r{j}",
+                customer_key=orig.customer_key,
+                received_at=alloc.take(_business_time(rng, refund_day, world.tz)),
+                currency=orig.currency,
+                amount_minor=cn.total_minor,
+                allocations=(Allocation(cn.key, cn.total_minor),),
+            )
+        )
+    return credit_notes, refunds
+
+
 def _build_background(rng: Rng, world: World, cfg: Dict[str, Any], alloc: TimeAllocator) -> List[Background]:
     n = resolve_range(cfg["size"]["background_entries"], rng)
-    days = _days(world.period_start, world.period_end)
+    days = _days(world.period_start, world.window_end)
     out = []
     for i in range(n):
         account = rng.weighted(tuple((a, w) for a, w in zip(EXPENSE_ACCOUNTS, (3, 4, 8, 14, 30, 22, 6))))

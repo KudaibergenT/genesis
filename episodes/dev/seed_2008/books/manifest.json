@@ -1,19 +1,18 @@
 {
-  "base_currency": "USD",
-  "company": "Blue Ridge Textiles JSC",
+  "base_currency": "EUR",
+  "company": "Amber Labs BV",
   "counts": {
-    "documents": 79,
-    "fx_rates": 56,
-    "invoices": 51,
-    "ledger_rows": 591,
-    "payments": 28
+    "documents": 113,
+    "fx_rates": 33,
+    "invoices": 71,
+    "ledger_rows": 584,
+    "payments": 42
   },
   "currency_exponents": {
     "EUR": 2,
-    "JPY": 0,
-    "USD": 2
+    "KWD": 3
   },
-  "episode_id": "ep-rprdlg7e7ly3zowl",
+  "episode_id": "ep-e336r6p4vla57jm6",
   "files": [
     "manifest.json",
     "ledger.csv",
@@ -22,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",
@@ -30,14 +29,15 @@
     "period_cutoff"
   ],
   "money_format": "integer minor units; exponent per currency_exponents",
-  "period_end": "2026-11-30",
-  "period_start": "2026-11-01",
+  "period_end": "2026-08-31",
+  "period_start": "2026-08-01",
+  "review_window_end": "2026-09-05",
   "rounding": {
-    "mode": "ROUND_HALF_UP",
+    "mode": "ROUND_HALF_EVEN",
     "unit": "minor"
   },
   "schema_version": "1.0",
-  "time_format": "ISO-8601 with UTC offset",
-  "timezone": "Asia/Tokyo",
-  "utc_offset": "+09:00"
+  "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
+  "timezone": "Asia/Almaty",
+  "utc_offset": "+05:00"
 }

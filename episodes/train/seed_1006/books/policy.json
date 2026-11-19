@@ -18,11 +18,25 @@
       "evidence": "both invoice doc_ids and one posting row_id (AR debit or revenue credit) of each copy",
       "tolerance_minor": 0
     },
+    "fx_conversion": {
+      "affected_ids": "doc_id of the document whose conversion into the ledger currency is wrong",
+      "amount": "absolute difference between the booked amount and convert(document amount, policy rate, policy rounding); booked amount = AR row for an invoice, cash row for a payment",
+      "currency": "ledger currency",
+      "evidence": "document doc_id, the converted posting row_id (invoice: AR or revenue row; payment: cash row) and the policy rate as fx id 'date|source|target'",
+      "tolerance_minor": 1
+    },
     "payment_allocation": {
       "affected_ids": "doc_id of the payment",
       "amount": "amount of that payment booked to 2400 Unapplied Customer Receipts",
       "currency": "ledger currency",
       "evidence": "payment doc_id and its 2400 Unapplied Customer Receipts row_id",
+      "tolerance_minor": 0
+    },
+    "period_cutoff": {
+      "affected_ids": "doc_id of the document booked in a different period than its own local date",
+      "amount": "base amount of the mis-dated posting (invoice: AR row; payment: cash row)",
+      "currency": "ledger currency",
+      "evidence": "document doc_id and the mis-dated posting row_id (invoice: AR or revenue row; payment: cash row)",
       "tolerance_minor": 0
     }
   },
@@ -33,17 +47,23 @@
       "2400 Unapplied Customer Receipts": "unapplied",
       "3000 Opening Equity": "equity",
       "4000 Revenue": "revenue",
+      "4100 Sales Returns": "returns",
       "7900 Realized FX Gain/Loss": "fx"
     },
+    "credit_notes": "invoices with negative total_minor are credit notes (AR credit, 4100 Sales Returns debit); payments with negative amount_minor are refunds paid to the customer",
     "currency": "KZT",
     "entries": "rows of one journal entry share the same timestamp",
-    "null_references": "missing references are null; links are never guessed"
+    "null_references": "missing references are null; links are never guessed",
+    "posting_date": "documents are posted at their own timestamp: invoices at issued_at, payments at timestamp"
   },
   "period": {
+    "assignment": "an item belongs to the period that contains the local date of its document timestamp",
     "boundary": "inclusive local dates in the company timezone",
-    "end": "2026-02-28",
-    "start": "2026-02-01",
-    "timezone": "Asia/Tokyo"
+    "end": "2026-03-31",
+    "review_window": "records dated after period end up to review_window_end belong to the NEXT period and are included only for cut-off review",
+    "review_window_end": "2026-04-05",
+    "start": "2026-03-01",
+    "timezone": "UTC"
   },
   "rounding": {
     "mode": "ROUND_HALF_EVEN",

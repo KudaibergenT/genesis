@@ -7,16 +7,21 @@ from auditenv import canon, money, timeutil
 from auditenv.version import SCHEMA_VERSION
 
 ISSUE_TYPES = ("duplicate_invoice", "payment_allocation", "fx_conversion", "period_cutoff")
-IMPLEMENTED_ISSUE_TYPES = ("duplicate_invoice", "payment_allocation")
 
 ERROR_VARIANTS = {
     "duplicate_invoice": ("same_number", "new_number"),
     "payment_allocation": ("missing", "partial"),
-    "fx_conversion": (),
-    "period_cutoff": (),
+    "fx_conversion": ("invoice_wrong_date", "invoice_wrong_rate", "invoice_wrong_scale",
+                      "receipt_wrong_date", "receipt_wrong_rate"),
+    "period_cutoff": ("early", "late", "tz_shift", "receipt_early"),
 }
 
+# Each interaction scenario injects two causally linked issues on one document.
+INTERACTIONS = ("fx_partial_at_cutoff", "allocation_with_fx")
+ISSUES_PER_INTERACTION = 2
+
 MAX_TOTAL_ISSUES = 12
+DEFAULT_MAX_ISSUES = MAX_TOTAL_ISSUES
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "schema_version": SCHEMA_VERSION,
@@ -25,6 +30,8 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "timezones": ["Asia/Almaty", "Asia/Dubai", "Asia/Kolkata", "Asia/Tokyo", "America/Bogota", "UTC"],
         "year": 2026,
         "months": [1, 12],
+        "review_window_days": 5,
+        "payment_timestamp_zones": ["company", "UTC"],
     },
     "size": {
         "customers": [6, 12],
@@ -43,13 +50,17 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "partial_payments": True,
         "unidentified_payments": True,
         "bulk_payments": True,
+        "refunds": True,
+        "boundary_documents": True,
     },
     "errors": {
-        "duplicate_invoice": {"count": [0, 2], "variants": ["same_number", "new_number"]},
-        "payment_allocation": {"count": [0, 2], "variants": ["missing", "partial"]},
-        "fx_conversion": {"count": 0, "variants": []},
-        "period_cutoff": {"count": 0, "variants": []},
+        "duplicate_invoice": {"count": [0, 2], "variants": list(ERROR_VARIANTS["duplicate_invoice"])},
+        "payment_allocation": {"count": [0, 2], "variants": list(ERROR_VARIANTS["payment_allocation"])},
+        "fx_conversion": {"count": [0, 2], "variants": list(ERROR_VARIANTS["fx_conversion"])},
+        "period_cutoff": {"count": [0, 2], "variants": list(ERROR_VARIANTS["period_cutoff"])},
     },
+    "interactions": {name: {"count": [0, 1]} for name in INTERACTIONS},
+    "max_issues": DEFAULT_MAX_ISSUES,
     "render": {"id_salt": 0, "order_salt": 0, "row_order": "chronological"},
 }
 
@@ -111,6 +122,12 @@ def resolve(config: Any = None) -> Dict[str, Any]:
     _check_count(company["months"], "company.months", 1, 12)
     if not isinstance(company["year"], int) or not 2000 <= company["year"] <= 2099:
         raise ConfigError("company.year out of range")
+    window = company["review_window_days"]
+    if isinstance(window, bool) or not isinstance(window, int) or not 3 <= window <= 10:
+        raise ConfigError("company.review_window_days must be an int in [3, 10]")
+    zones = company["payment_timestamp_zones"]
+    if not isinstance(zones, list) or not zones or any(z not in ("company", "UTC") for z in zones):
+        raise ConfigError("company.payment_timestamp_zones must be a non-empty subset of ['company', 'UTC']")
 
     size = cfg["size"]
     _check_count(size["customers"], "size.customers", 3, 40)
@@ -135,15 +152,19 @@ def resolve(config: Any = None) -> Dict[str, Any]:
     for issue_type in ISSUE_TYPES:
         spec = cfg["errors"][issue_type]
         _check_count(spec["count"], f"errors.{issue_type}.count", 0, MAX_TOTAL_ISSUES)
-        if issue_type not in IMPLEMENTED_ISSUE_TYPES and _upper(spec["count"]) > 0:
-            raise ConfigError(f"errors.{issue_type} is not implemented in this generator version")
         if not isinstance(spec["variants"], list) or any(v not in ERROR_VARIANTS[issue_type] for v in spec["variants"]):
             raise ConfigError(f"errors.{issue_type}.variants invalid")
         if _upper(spec["count"]) > 0 and not spec["variants"]:
             raise ConfigError(f"errors.{issue_type}.variants must be non-empty when count > 0")
         total_upper += _upper(spec["count"])
+    for name in INTERACTIONS:
+        _check_count(cfg["interactions"][name]["count"], f"interactions.{name}.count", 0, MAX_TOTAL_ISSUES)
+        total_upper += ISSUES_PER_INTERACTION * _upper(cfg["interactions"][name]["count"])
     if total_upper > MAX_TOTAL_ISSUES:
         raise ConfigError(f"total error count upper bound exceeds {MAX_TOTAL_ISSUES}")
+    cap = cfg["max_issues"]
+    if isinstance(cap, bool) or not isinstance(cap, int) or not 0 <= cap <= MAX_TOTAL_ISSUES:
+        raise ConfigError(f"max_issues must be an int in [0, {MAX_TOTAL_ISSUES}]")
 
     render = cfg["render"]
     for key in ("id_salt", "order_salt"):
@@ -156,7 +177,7 @@ def resolve(config: Any = None) -> Dict[str, Any]:
 
 def world_part(cfg: Dict[str, Any]) -> Dict[str, Any]:
     """Config subset that determines the clean company history."""
-    return {k: v for k, v in cfg.items() if k not in ("errors", "render")}
+    return {k: v for k, v in cfg.items() if k not in ("errors", "interactions", "max_issues", "render")}
 
 
 def config_hash(cfg: Dict[str, Any]) -> str:

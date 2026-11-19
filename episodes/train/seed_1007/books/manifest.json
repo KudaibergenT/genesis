@@ -1,19 +1,18 @@
 {
-  "base_currency": "USD",
-  "company": "Saffron Textiles Ltd",
+  "base_currency": "EUR",
+  "company": "Verdant Clinics LLP",
   "counts": {
-    "documents": 104,
-    "fx_rates": 58,
-    "invoices": 61,
-    "ledger_rows": 438,
-    "payments": 43
+    "documents": 84,
+    "fx_rates": 34,
+    "invoices": 50,
+    "ledger_rows": 521,
+    "payments": 34
   },
   "currency_exponents": {
-    "CNY": 2,
     "EUR": 2,
-    "USD": 2
+    "GBP": 2
   },
-  "episode_id": "ep-odkfytxbuyvi47sg",
+  "episode_id": "ep-lkphidjacwfvg44b",
   "files": [
     "manifest.json",
     "ledger.csv",
@@ -22,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",
@@ -30,14 +29,15 @@
     "period_cutoff"
   ],
   "money_format": "integer minor units; exponent per currency_exponents",
-  "period_end": "2026-05-31",
-  "period_start": "2026-05-01",
+  "period_end": "2026-10-31",
+  "period_start": "2026-10-01",
+  "review_window_end": "2026-11-05",
   "rounding": {
     "mode": "ROUND_HALF_EVEN",
     "unit": "minor"
   },
   "schema_version": "1.0",
-  "time_format": "ISO-8601 with UTC offset",
-  "timezone": "America/Bogota",
-  "utc_offset": "-05:00"
+  "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
+  "timezone": "Asia/Almaty",
+  "utc_offset": "+05:00"
 }

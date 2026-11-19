@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from auditenv import timeutil
 
@@ -12,6 +12,7 @@ ACCOUNTS = {
     "unapplied": "2400 Unapplied Customer Receipts",
     "equity": "3000 Opening Equity",
     "revenue": "4000 Revenue",
+    "returns": "4100 Sales Returns",
     "fx": "7900 Realized FX Gain/Loss",
 }
 
@@ -55,6 +56,7 @@ class Invoice:
     due_at: datetime
     currency: str
     lines: Tuple[Line, ...]
+    kind: str = "invoice"  # "invoice" or "credit_note" (negative total)
 
     @property
     def total_minor(self) -> int:
@@ -113,6 +115,8 @@ class World:
     fx: Dict[str, List[Tuple[date, str]]]
     opening_at: datetime
     opening_cash_minor: int
+    window_end: date
+    payment_zone: str
 
     @property
     def tz(self):
@@ -124,19 +128,29 @@ class World:
     def in_period(self, dt: datetime) -> bool:
         return self.period_start <= self.local_date(dt) <= self.period_end
 
-    def rate(self, currency: str, on: date) -> str:
-        """Policy: rate of the latest published date on or before `on`."""
-        if currency == self.base_currency:
-            return "1"
+    def in_window(self, dt: datetime) -> bool:
+        return self.period_end < self.local_date(dt) <= self.window_end
+
+    def rate_entry(self, currency: str, on: date) -> Tuple[date, str]:
+        """Policy: the latest published rate on or before `on`."""
         best = None
         for d, rate in self.fx[currency]:
             if d <= on:
-                best = rate
+                best = (d, rate)
             else:
                 break
         if best is None:
             raise LookupError(f"no FX rate for {currency} on or before {on}")
         return best
+
+    def rate(self, currency: str, on: date) -> str:
+        if currency == self.base_currency:
+            return "1"
+        return self.rate_entry(currency, on)[1]
+
+    def fx_evidence_key(self, currency: str, on: date) -> str:
+        d, _ = self.rate_entry(currency, on)
+        return f"fx:{d.isoformat()}|{currency}|{self.base_currency}"
 
 
 @dataclass
@@ -145,6 +159,11 @@ class Books:
     payments: List[Payment]
     background: List[Background]
     allocation_overrides: Dict[str, Dict[str, int]] = field(default_factory=dict)
+    # Booking overrides injected by error operators (never part of the event history):
+    #   invoice_overrides[inv]  = {"at": datetime, "rate": str, "unscaled": True}
+    #   receipt_overrides[pay]  = {"at": datetime, "rate": str}
+    invoice_overrides: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    receipt_overrides: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     def copy(self) -> "Books":
         return Books(
@@ -152,6 +171,8 @@ class Books:
             payments=list(self.payments),
             background=list(self.background),
             allocation_overrides={k: dict(v) for k, v in self.allocation_overrides.items()},
+            invoice_overrides={k: dict(v) for k, v in self.invoice_overrides.items()},
+            receipt_overrides={k: dict(v) for k, v in self.receipt_overrides.items()},
         )
 
 

@@ -1,18 +1,18 @@
 {
-  "base_currency": "KZT",
-  "company": "Quartz Robotics BV",
+  "base_currency": "USD",
+  "company": "Verdant Studios BV",
   "counts": {
-    "documents": 98,
-    "fx_rates": 28,
-    "invoices": 63,
-    "ledger_rows": 539,
-    "payments": 35
+    "documents": 107,
+    "fx_rates": 32,
+    "invoices": 70,
+    "ledger_rows": 650,
+    "payments": 37
   },
   "currency_exponents": {
-    "EUR": 2,
-    "KZT": 2
+    "JPY": 0,
+    "USD": 2
   },
-  "episode_id": "ep-2mkurcdmbrsiuulf",
+  "episode_id": "ep-csuzbvopsexnyovi",
   "files": [
     "manifest.json",
     "ledger.csv",
@@ -21,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",
@@ -29,14 +29,15 @@
     "period_cutoff"
   ],
   "money_format": "integer minor units; exponent per currency_exponents",
-  "period_end": "2026-09-30",
-  "period_start": "2026-09-01",
+  "period_end": "2026-03-31",
+  "period_start": "2026-03-01",
+  "review_window_end": "2026-04-05",
   "rounding": {
-    "mode": "ROUND_HALF_EVEN",
+    "mode": "ROUND_HALF_UP",
     "unit": "minor"
   },
   "schema_version": "1.0",
-  "time_format": "ISO-8601 with UTC offset",
-  "timezone": "Asia/Kolkata",
-  "utc_offset": "+05:30"
+  "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
+  "timezone": "Asia/Tokyo",
+  "utc_offset": "+09:00"
 }

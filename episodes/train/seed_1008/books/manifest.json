@@ -1,19 +1,19 @@
 {
-  "base_currency": "EUR",
-  "company": "Blue Ridge Logistics GmbH",
+  "base_currency": "USD",
+  "company": "Orchard Labs LLP",
   "counts": {
-    "documents": 63,
-    "fx_rates": 56,
+    "documents": 65,
+    "fx_rates": 68,
     "invoices": 38,
-    "ledger_rows": 574,
-    "payments": 25
+    "ledger_rows": 345,
+    "payments": 27
   },
   "currency_exponents": {
     "CNY": 2,
-    "EUR": 2,
-    "GBP": 2
+    "JPY": 0,
+    "USD": 2
   },
-  "episode_id": "ep-i4vo5e4memm52gj3",
+  "episode_id": "ep-s33rymfwej35ijyv",
   "files": [
     "manifest.json",
     "ledger.csv",
@@ -22,7 +22,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.1.0",
+  "generator_version": "0.2.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",
@@ -30,14 +30,15 @@
     "period_cutoff"
   ],
   "money_format": "integer minor units; exponent per currency_exponents",
-  "period_end": "2026-11-30",
-  "period_start": "2026-11-01",
+  "period_end": "2026-10-31",
+  "period_start": "2026-10-01",
+  "review_window_end": "2026-11-05",
   "rounding": {
-    "mode": "ROUND_HALF_UP",
+    "mode": "ROUND_HALF_EVEN",
     "unit": "minor"
   },
   "schema_version": "1.0",
-  "time_format": "ISO-8601 with UTC offset",
-  "timezone": "UTC",
-  "utc_offset": "+00:00"
+  "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
+  "timezone": "Asia/Almaty",
+  "utc_offset": "+05:00"
 }

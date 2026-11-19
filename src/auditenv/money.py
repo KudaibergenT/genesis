@@ -41,6 +41,12 @@ def convert(amount_minor: int, src: str, dst: str, rate: str, rounding: str) -> 
     return int(value.quantize(Decimal(1), rounding=ROUNDING_MODES[rounding], context=_CTX))
 
 
+def convert_unscaled(amount_minor: int, rate: str, rounding: str) -> int:
+    """Faulty conversion that multiplies minor units by the rate without rescaling exponents."""
+    value = _CTX.multiply(Decimal(amount_minor), Decimal(rate))
+    return int(value.quantize(Decimal(1), rounding=ROUNDING_MODES[rounding], context=_CTX))
+
+
 def format_minor(amount_minor: int, currency: str) -> str:
     exp = EXPONENTS[currency]
     sign = "-" if amount_minor < 0 else ""

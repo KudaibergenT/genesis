@@ -1,16 +1,17 @@
-"""Journal entries as a pure function of the books (events + declared overrides).
+"""Journal entries as a pure function of the books (events + declared booking overrides).
 
 Ledger is kept in the base (functional) currency. Documents keep their own currency;
 conversion uses the policy rate (latest rate on or before the local document date).
 Receipts credit AR at the invoice's carrying rate; the difference to cash at the
-receipt-date rate is realized FX gain/loss.
+receipt-date rate is realized FX gain/loss. Credit notes and refunds carry negative
+amounts and post to the opposite sides.
 """
 
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from auditenv import money
-from auditenv.generator.model import ACCOUNTS, Books, Invoice, LedgerLine, World
+from auditenv.generator.model import ACCOUNTS, Books, Invoice, LedgerLine, Payment, World
 
 
 def _line(entry: str, tag: str, seq: int, at, account: str, debit: int, credit: int,
@@ -20,9 +21,35 @@ def _line(entry: str, tag: str, seq: int, at, account: str, debit: int, credit: 
     return LedgerLine(f"{entry}/{tag}", entry, seq, at, account, debit, credit, entity, number, payment)
 
 
+def _sides(amount: int, natural_debit: bool) -> Tuple[int, int]:
+    """Positive amounts go to the natural side, negative ones to the other side."""
+    if (amount > 0) == natural_debit:
+        return abs(amount), 0
+    return 0, abs(amount)
+
+
+def invoice_policy_rate(world: World, inv: Invoice) -> str:
+    return world.rate(inv.currency, world.local_date(inv.issued_at))
+
+
+def receipt_policy_rate(world: World, pay: Payment) -> str:
+    return world.rate(pay.currency, world.local_date(pay.received_at))
+
+
 def invoice_base_amount(world: World, inv: Invoice) -> int:
-    rate = world.rate(inv.currency, world.local_date(inv.issued_at))
-    return money.convert(inv.total_minor, inv.currency, world.base_currency, rate, world.rounding)
+    return money.convert(inv.total_minor, inv.currency, world.base_currency, invoice_policy_rate(world, inv), world.rounding)
+
+
+def booked_invoice_conversion(world: World, books: Books, inv: Invoice, amount: int) -> int:
+    override = books.invoice_overrides.get(inv.key, {})
+    rate = override.get("rate") or invoice_policy_rate(world, inv)
+    if override.get("unscaled"):
+        return money.convert_unscaled(amount, rate, world.rounding)
+    return money.convert(amount, inv.currency, world.base_currency, rate, world.rounding)
+
+
+def booked_receipt_rate(world: World, books: Books, pay: Payment) -> str:
+    return books.receipt_overrides.get(pay.key, {}).get("rate") or receipt_policy_rate(world, pay)
 
 
 def build_ledger(world: World, books: Books) -> List[LedgerLine]:
@@ -37,19 +64,22 @@ def build_ledger(world: World, books: Books) -> List[LedgerLine]:
     carrying: Dict[str, int] = {}
     for inv in books.invoices:
         invoices[inv.key] = inv
-        amount = invoice_base_amount(world, inv)
+        amount = booked_invoice_conversion(world, books, inv, inv.total_minor)
         carrying[inv.key] = amount
+        at = books.invoice_overrides.get(inv.key, {}).get("at", inv.issued_at)
+        counter = ACCOUNTS["revenue"] if amount > 0 else ACCOUNTS["returns"]
         entry = f"E:{inv.key}"
-        lines.append(_line(entry, "ar", 0, inv.issued_at, ACCOUNTS["ar"], amount, 0, inv.customer_key, inv.number_key, None))
-        lines.append(_line(entry, "rev", 1, inv.issued_at, ACCOUNTS["revenue"], 0, amount, inv.customer_key, inv.number_key, None))
+        lines.append(_line(entry, "ar", 0, at, ACCOUNTS["ar"], *_sides(amount, True), inv.customer_key, inv.number_key, None))
+        lines.append(_line(entry, "rev", 1, at, counter, *_sides(amount, False), inv.customer_key, inv.number_key, None))
 
     settled_cur: Dict[str, int] = defaultdict(int)
     settled_base: Dict[str, int] = defaultdict(int)
     for pay in sorted(books.payments, key=lambda p: (p.received_at, p.key)):
         entry = f"E:{pay.key}"
-        rate = world.rate(pay.currency, world.local_date(pay.received_at))
+        at = books.receipt_overrides.get(pay.key, {}).get("at", pay.received_at)
+        rate = booked_receipt_rate(world, books, pay)
         cash = money.convert(pay.amount_minor, pay.currency, base, rate, world.rounding)
-        lines.append(_line(entry, "cash", 0, pay.received_at, ACCOUNTS["cash"], cash, 0, pay.customer_key, None, pay.key))
+        lines.append(_line(entry, "cash", 0, at, ACCOUNTS["cash"], *_sides(cash, True), pay.customer_key, None, pay.key))
         seq = 1
         ar_total = 0
         unapplied_cur = pay.amount_minor
@@ -67,26 +97,23 @@ def build_ledger(world: World, books: Books) -> List[LedgerLine]:
                 if settled_cur[key] + applied == inv.total_minor:
                     ar = carrying[key] - settled_base[key]
                 else:
-                    inv_rate = world.rate(inv.currency, world.local_date(inv.issued_at))
-                    ar = money.convert(applied, inv.currency, base, inv_rate, world.rounding)
+                    ar = booked_invoice_conversion(world, books, inv, applied)
                 settled_cur[key] += applied
                 settled_base[key] += ar
                 ar_total += ar
-                lines.append(_line(entry, f"ar:{key}", seq, pay.received_at, ACCOUNTS["ar"], 0, ar,
+                lines.append(_line(entry, f"ar:{key}", seq, at, ACCOUNTS["ar"], *_sides(ar, False),
                                    pay.customer_key, inv.number_key, pay.key))
                 seq += 1
         unapplied_base = 0
         if unapplied_cur:
             unapplied_base = money.convert(unapplied_cur, pay.currency, base, rate, world.rounding)
         if unapplied_base:
-            lines.append(_line(entry, "unapplied", seq, pay.received_at, ACCOUNTS["unapplied"], 0, unapplied_base,
+            lines.append(_line(entry, "unapplied", seq, at, ACCOUNTS["unapplied"], *_sides(unapplied_base, False),
                                pay.customer_key, None, pay.key))
             seq += 1
         fx = cash - ar_total - unapplied_base
-        if fx > 0:
-            lines.append(_line(entry, "fx", seq, pay.received_at, ACCOUNTS["fx"], 0, fx, pay.customer_key, None, pay.key))
-        elif fx < 0:
-            lines.append(_line(entry, "fx", seq, pay.received_at, ACCOUNTS["fx"], -fx, 0, pay.customer_key, None, pay.key))
+        if fx:
+            lines.append(_line(entry, "fx", seq, at, ACCOUNTS["fx"], *_sides(fx, False), pay.customer_key, None, pay.key))
 
     for bg in books.background:
         entry = f"E:{bg.key}"

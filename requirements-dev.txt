@@ -1,0 +1,3 @@
+# Test-only dependencies; the environment itself uses the Python 3.11 standard library only.
+pytest==8.3.4
+hypothesis==6.122.3

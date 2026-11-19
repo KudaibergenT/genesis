@@ -72,6 +72,7 @@ def cmd_baselines(args: argparse.Namespace) -> int:
     os.makedirs(args.out, exist_ok=True)
     names = args.policy or list(OFFICIAL_BASELINES) + ["silence", "reference_solver"]
     episodes = [(seed, cfg) for split in args.split for seed, cfg in split_episodes(split)]
+    tag = "" if args.split == ["train", "dev"] else "_".join(args.split) + "_"
     summary = []
     for name in names:
         trajectories, results = [], []
@@ -80,23 +81,26 @@ def cmd_baselines(args: argparse.Namespace) -> int:
             trajectories.extend(run.trajectory)
             results.append({"episode_id": run.episode_id, "seed": seed, "steps": run.steps,
                             "wall_time_s": round(run.wall_time_s, 4), **run.result})
-        write_jsonl(os.path.join(args.out, f"trajectories_{name}.jsonl"), trajectories)
-        write_jsonl(os.path.join(args.out, f"results_{name}.jsonl"), results)
+        write_jsonl(os.path.join(args.out, f"trajectories_{tag}{name}.jsonl"), trajectories)
+        write_jsonl(os.path.join(args.out, f"results_{tag}{name}.jsonl"), results)
         mean = lambda key: statistics.fmean(r["metrics"][key] for r in results)  # noqa: E731
+        tp, fp, fn = (sum(r["metrics"][k] for r in results) for k in ("tp", "fp", "fn"))
         summary.append({
             "policy": name,
             "episodes": len(results),
-            "precision": round(mean("precision"), 3),
-            "recall": round(mean("recall"), 3),
-            "f1": round(mean("f1"), 3),
+            "micro_precision": round(tp / (tp + fp), 3) if tp + fp else 0.0,
+            "micro_recall": round(tp / (tp + fn), 3) if tp + fn else 0.0,
+            "micro_f1": round(2 * tp / (2 * tp + fp + fn), 3) if tp + fp + fn else 1.0,
+            "mean_episode_f1": round(mean("f1"), 3),
             "return": round(mean("reward"), 3),
-            "steps": round(statistics.fmean(r["steps"] for r in results), 1),
+            "inspection_steps": round(statistics.fmean(r["inspection_steps"] for r in results), 1),
             "wall_time_s": round(statistics.fmean(r["wall_time_s"] for r in results), 4),
         })
-    with open(os.path.join(args.out, "summary.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(args.out, f"summary_{tag}".rstrip("_") + ".json"), "w", encoding="utf-8") as fh:
         json.dump(summary, fh, indent=2)
         fh.write("\n")
-    cols = ("policy", "episodes", "precision", "recall", "f1", "return", "steps", "wall_time_s")
+    cols = ("policy", "episodes", "micro_precision", "micro_recall", "micro_f1", "mean_episode_f1", "return",
+            "inspection_steps", "wall_time_s")
     print(" | ".join(cols))
     for row in summary:
         print(" | ".join(str(row[c]) for c in cols))
@@ -121,7 +125,7 @@ def main(argv: List[str] = None) -> int:
     r.set_defaults(func=cmd_run)
 
     b = sub.add_parser("baselines", help="run baseline policies on open splits")
-    b.add_argument("--split", nargs="+", default=["train", "dev"], choices=["train", "dev"])
+    b.add_argument("--split", nargs="+", default=["train", "dev"], choices=["train", "dev", "stage2_eval"])
     b.add_argument("--policy", nargs="*", choices=sorted(POLICIES))
     b.add_argument("--mode", default="eval", choices=["train", "eval"])
     b.add_argument("--out", default=os.path.join(ROOT, "results"))

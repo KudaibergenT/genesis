@@ -486,7 +486,25 @@ def judge_checks(args, out_dir: str) -> None:
         assert proc.returncode == 0, summary
         return summary
 
+    def pytest_counts(files):
+        def run():
+            junit = os.path.join(out_dir, f"junit_{os.path.basename(files[0])[:-3]}.xml")
+            env = dict(os.environ, PYTHONPATH=os.pathsep.join([os.path.join(ROOT, "src"), ROOT]), PYTHONHASHSEED="0")
+            proc = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-o", "addopts=",
+                                   f"--junitxml={junit}", *files], cwd=ROOT, env=env, capture_output=True, text=True)
+            root = ET.parse(junit).getroot()
+            suite = root if root.tag == "testsuite" else root.find("testsuite")
+            counts = {k: int(suite.get(k, 0)) for k in ("tests", "failures", "errors", "skipped")}
+            assert proc.returncode == 0 and counts["failures"] == counts["errors"] == counts["skipped"] == 0, \
+                (counts, proc.stdout[-2000:])
+            return counts
+        return run
+
     check("judge", "published_definitions", definitions)
+    check("judge", "truth_contract_section03_fixtures", pytest_counts(["tests/test_truth_contract.py"]))
+    check("judge", "json_schema_conformance", pytest_counts(["tests/test_schemas.py"]))
+    check("judge", "independent_verifier_negative_controls",
+          pytest_counts(["tests/test_independent_verification.py", "tests/test_posting_examples.py"]))
     check("judge", "clean_room_jury_simulator", simulator)
     check("judge", "paired_checks_P01_P20", paired)
     check("judge", "adapter_time_limit", adapter_time_limit)

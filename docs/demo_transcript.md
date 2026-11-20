@@ -1,6 +1,6 @@
 # Демо: interaction_fx_partial_at_cutoff, seed 216
 
-Компания `Saffron Systems LLP`, период 2026-07-01 – 2026-07-31, базовая валюта EUR, пояс Asia/Kolkata; 617 строк журнала, 98 документов. Политика — скриптовый `reference_solver` в отдельном процессе (uid сброшен: False), режим closed.
+Компания `Stakrion Sabroukrer (synthetic)`, период 2026-07-01 – 2026-07-31, базовая валюта EUR, пояс Asia/Kolkata; 617 строк журнала, 98 документов. Политика — скриптовый `reference_solver` в отдельном процессе (uid сброшен: False), режим closed.
 
 ## Шаги
 

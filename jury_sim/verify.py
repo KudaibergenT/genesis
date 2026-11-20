@@ -8,12 +8,17 @@ document date, rounded once with policy rounding; an item belongs to the period 
 of its document timestamp; missing references are explicit null.
 """
 
+import os
+import sys
 from collections import defaultdict
 from datetime import date, datetime, timedelta, timezone
 from decimal import ROUND_HALF_EVEN, ROUND_HALF_UP, Decimal
 from typing import Any, Dict, List, Set, Tuple
 
-from jury_sim.fileio import all_ids, fx_id
+if __package__ in (None, ""):  # run as a script: python jury_sim/verify.py EPISODE_DIR...
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from jury_sim.fileio import all_ids, fx_id  # noqa: E402
 
 ROUNDING = {"ROUND_HALF_EVEN": ROUND_HALF_EVEN, "ROUND_HALF_UP": ROUND_HALF_UP}
 
@@ -207,6 +212,7 @@ def verify(data: Dict[str, Any]) -> List[str]:
     index.update({d["doc_id"]: d for d in data["invoices"] + data["payments"]})
     index.update({fx_id(r): r for r in data["fx"]})
     for issue in truth:
+        issue = dict(issue, tolerance_minor=issue.get("tolerance_minor", 0))  # jury default when absent
         related |= set(issue["affected_ids"])
         for s in issue["evidence_sets"]:
             related |= {x for x in s if x in index and "doc_id" in index[x]}
@@ -240,3 +246,25 @@ def verify(data: Dict[str, Any]) -> List[str]:
         if not docs & related:
             problems.append(f"undeclared discrepancy {code} {sorted(docs)}")
     return problems
+
+
+def main(argv=None) -> int:
+    """python jury_sim/verify.py EPISODE_DIR... : the six block-2 conditions for any flat episode directory."""
+    import argparse
+    import json
+
+    from jury_sim.fileio import load
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("episode_dirs", nargs="+")
+    args = parser.parse_args(argv)
+    failed = 0
+    for d in args.episode_dirs:
+        problems = verify(load(d))
+        failed += bool(problems)
+        print(json.dumps({"episode_dir": d, "passed": not problems, "problems": problems}, ensure_ascii=False))
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

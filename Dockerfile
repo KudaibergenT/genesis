@@ -24,6 +24,7 @@ COPY src ./src
 COPY configs ./configs
 COPY episodes ./episodes
 COPY scripts ./scripts
+COPY jury_sim ./jury_sim
 COPY tests ./tests
 COPY docs ./docs
 

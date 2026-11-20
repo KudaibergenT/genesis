@@ -477,7 +477,17 @@ def judge_checks(args, out_dir: str) -> None:
         return {"pairs_passed": len(pairs), "f1_and_return_equal": all(p["f1"][0] == p["f1"][1] and
                                                                          p["return"][0] == p["return"][1] for p in pairs)}
 
+    def simulator():
+        sim_out = os.path.join(out_dir, "jury_sim")
+        proc = subprocess.run([sys.executable, "jury_sim/run.py", "--out", sim_out], cwd=ROOT, capture_output=True,
+                              text=True, env=dict(os.environ, PYTHONHASHSEED="0"))
+        with open(os.path.join(sim_out, "jury_sim.json"), encoding="utf-8") as fh:
+            summary = json.load(fh)["summary"]
+        assert proc.returncode == 0, summary
+        return summary
+
     check("judge", "published_definitions", definitions)
+    check("judge", "clean_room_jury_simulator", simulator)
     check("judge", "paired_checks_P01_P20", paired)
     check("judge", "adapter_time_limit", adapter_time_limit)
 

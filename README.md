@@ -27,10 +27,42 @@ python3.11 scripts/run_all.py   # то же без Docker (нужны pytest/hyp
 Рабочая директория — корень проекта (`/app` в контейнере). Точки входа:
 
 ```bash
-docker build -t genesis-auditenv .
-docker run --rm --network none --cpus 2 --memory 4g --entrypoint python -v "$PWD/jury:/jury" \
-  genesis-auditenv -c "import judge_adapter as ja; ..."
+docker build -t genesis-auditenv:stage3 .
+scripts/judge_container_example.sh   # полный рабочий пример: generate → reset(closed) → step → submit → score
 ```
+
+Пример запускает внутри контейнера (без сети, 2 CPU, 4 ГБ, `--read-only`, `--cap-drop ALL`) ровно
+такую последовательность и печатает JSON с результатом; его выполняет тест
+`tests/test_docker.py::test_judge_container_example_runs`. Минимальная форма вызова:
+
+```bash
+mkdir -p jury && chmod 0777 jury
+docker run --rm --network none --cpus 2 --memory 4g -v "$PWD/jury:/jury" --workdir /app \
+  --entrypoint python genesis-auditenv:stage3 -c \
+  'import judge_adapter as ja; ja.generate_episode(216, {}, "/jury/D16"); print(sorted(__import__("os").listdir("/jury/D16")))'
+```
+
+**Права каталога вывода.** В контейнере адаптер работает от root. При запуске с `--cap-drop ALL` у root
+нет `CAP_DAC_OVERRIDE`, и он может писать только в каталог, разрешённый битами прав. Поэтому
+смонтированный каталог должен быть доступен на запись всем (`chmod 0777`) или принадлежать root; без
+`--cap-drop` ограничения нет. Если каталог недоступен, `generate_episode` сразу выдаёт
+`PermissionError` с этой подсказкой, а не падает посреди записи. Политика агента в изолированном
+раннере работает отдельно, под uid 10001, и в каталог эпизода не пишет.
+
+**Схемы.** Машиночитаемые JSON Schema лежат в `schemas/` (ссылка на `src/auditenv/schemas/`): manifest,
+policy, строки всех таблиц, truth (каноническая и принимаемая форма), provenance, findings, действия и
+наблюдения адаптера, результат `score_episode`. Соответствие всех эпизодов и обмена с адаптером
+проверяют `tests/test_schemas.py` и `tests/test_truth_contract.py`.
+
+**Контракт truth.json.** Генератор пишет `{"schema_version","episode_id","issues":[...]}`. В каждой
+ошибке есть поля §03 (`issue_id`, `type`, `affected_ids`, `expected_amount_minor`, `currency`,
+`evidence_sets`) и явный `tolerance_minor`, равный `policy.issue_conventions[type].tolerance_minor`
+(FX — 1, остальные — 0). Оценщик принимает и фикстуры только с полями §03:
+- отсутствующий `tolerance_minor` = 0 (умолчание жюри);
+- отсутствующий `episode_id` берётся из `manifest.json`;
+- можно передать просто список ошибок.
+
+Некорректный truth даёт `TruthFormatError` со списком нарушений схемы.
 
 ```python
 import judge_adapter as ja

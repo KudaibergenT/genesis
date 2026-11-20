@@ -128,3 +128,36 @@ def test_quick_offline_evaluation_passes_inside_the_container(image):
     out = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     assert out.returncode == 0, out.stdout[-3000:]
     assert '"ok": true' in out.stdout and "[FAIL]" not in out.stdout
+
+
+def test_adapter_reports_an_unwritable_output_directory_clearly(image):
+    volume = "auditenv-perm-adapter"
+    subprocess.run(["docker", "volume", "rm", "-f", volume], capture_output=True)
+    subprocess.run(["docker", "volume", "create", volume], capture_output=True, check=True)
+    try:
+        subprocess.run(["docker", "run", "--rm", "--entrypoint", "sh", "-v", f"{volume}:/jury", image, "-c",
+                        "chown 1001:1001 /jury && chmod 0755 /jury"], capture_output=True, check=True)
+        out = subprocess.run(["docker", "run", "--rm", *LIMITS, "-v", f"{volume}:/jury", "--workdir", "/app",
+                              "--entrypoint", "python", image, "-c",
+                              "import judge_adapter as ja; ja.generate_episode(1, {}, '/jury/E')"],
+                             capture_output=True, text=True, timeout=300)
+        assert out.returncode != 0
+        assert "PermissionError" in out.stderr and "chmod 0777" in out.stderr
+    finally:
+        subprocess.run(["docker", "volume", "rm", "-f", volume], capture_output=True)
+
+
+def test_judge_container_example_runs(image, tmp_path):
+    """The README example, executed as written (same flags as the official run)."""
+    env = dict(os.environ, IMAGE=image, OUT=str(tmp_path / "judge"))
+    out = subprocess.run(["sh", os.path.join(ROOT, "scripts", "judge_container_example.sh")], cwd=ROOT, env=env,
+                         capture_output=True, text=True, timeout=600)
+    assert out.returncode == 0, out.stderr[-3000:]
+    info = json.loads(out.stdout.strip().splitlines()[-1])
+    assert info["first_observation_keys"] == ["manifest", "policy", "remaining_steps", "task"]
+    assert info["page_rows"] == 50 and info["submit"]["result"] == {"accepted": True}
+    assert info["closed_reward_seen_by_policy"] == 0.0
+    assert info["score"]["fp"] == 0 and info["score"]["fn"] == 0 and info["score"]["f1"] == 1.0
+    assert set(os.listdir(tmp_path / "judge" / "D16")) == {
+        "manifest.json", "ledger.csv", "invoices.jsonl", "payments.jsonl", "fx.csv", "policy.json", "truth.json",
+        "provenance.json"}

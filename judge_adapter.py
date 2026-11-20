@@ -43,6 +43,12 @@ def generate_episode(seed: int, config: Dict[str, Any], output_dir: str) -> None
     closed truth.json and provenance.json into output_dir. `config` is the team generator config."""
     team_config = {k: v for k, v in (config or {}).items() if k not in ("mode", "episode_dir")}
     episode = _generate(seed, team_config.get("team_config", team_config) or None)
+    parent = os.path.dirname(os.path.abspath(output_dir))
+    target = output_dir if os.path.isdir(output_dir) else parent
+    if os.path.isdir(target) and not os.access(target, os.W_OK):
+        raise PermissionError(
+            f"output_dir {output_dir!r} is not writable by uid {os.getuid()}: make the mounted directory writable "
+            "(e.g. chmod 0777) or run the container without --cap-drop ALL (see README, 'Подключение жюри')")
     write_episode(episode, output_dir, layout="flat")
 
 

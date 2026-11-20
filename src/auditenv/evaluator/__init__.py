@@ -44,9 +44,12 @@ def open_ids(public) -> FrozenSet[str]:
 
 
 class Grader:
-    def __init__(self, truth: Dict[str, Any], known_ids: Optional[FrozenSet[str]] = None) -> None:
-        self._truth = truth
-        self._episode_id = truth["episode_id"]
+    def __init__(self, truth: Any, known_ids: Optional[FrozenSet[str]] = None,
+                 episode_id: Optional[str] = None) -> None:
+        from auditenv.truth import normalize_truth
+
+        self._truth = normalize_truth(truth, episode_id)
+        self._episode_id = self._truth["episode_id"]
         self._known_ids = known_ids
 
     def grade(self, submission: Any, inspection_steps: int, outcome: str = "submitted") -> Grade:

@@ -168,7 +168,8 @@ class AuditEnv:
     # ------------------------------------------------------------------ internals
     def _load(self, episode: Episode, mode: str) -> None:
         public = episode.public
-        self._grader = Grader(episode.truth, open_ids(public)) if episode.truth is not None else None
+        self._grader = (Grader(episode.truth, open_ids(public), episode_id=public.manifest["episode_id"])
+                        if episode.truth is not None else None)
         self._episode_id = public.manifest["episode_id"]
         self._manifest = canon.json_copy(public.manifest)
         self._policy = canon.json_copy(public.policy)

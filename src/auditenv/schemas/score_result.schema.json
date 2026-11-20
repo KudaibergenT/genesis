@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "judge_adapter.score_episode result",
+  "type": "object",
+  "properties": {
+    "tp": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "fp": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "fn": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "precision": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "recall": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "f1": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "return": {
+      "type": "number",
+      "minimum": -1,
+      "maximum": 1
+    }
+  },
+  "required": [
+    "tp",
+    "fp",
+    "fn",
+    "precision",
+    "recall",
+    "f1",
+    "return"
+  ],
+  "additionalProperties": false
+}

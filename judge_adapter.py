@@ -48,8 +48,11 @@ def generate_episode(seed: int, config: Dict[str, Any], output_dir: str) -> None
 
 # ---------------------------------------------------------------------------- scoring (closed)
 def score_episode(episode_dir: str, findings: Dict[str, Any], inspection_steps: int) -> Dict[str, Any]:
+    """truth.json may contain only the fields of case section 03 (see src/auditenv/truth.py):
+    a missing tolerance_minor means 0, a missing episode_id is taken from manifest.json."""
     episode = load_episode(episode_dir)
-    grade = Grader(episode.truth, open_ids(episode.public)).grade(findings, inspection_steps)
+    grader = Grader(episode.truth, open_ids(episode.public), episode_id=episode.public.manifest["episode_id"])
+    grade = grader.grade(findings, inspection_steps)
     if not grade.valid:
         _score_errors.append("; ".join(grade.errors))
         log.warning("invalid submit in %s: %s", episode_dir, "; ".join(grade.errors))

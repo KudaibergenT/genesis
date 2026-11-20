@@ -167,14 +167,26 @@ def test_time_limit_kills_the_agent_and_cleans_up(name):
 
 
 def test_evaluator_faults_are_not_revealed_to_the_agent():
+    """A malformed truth is rejected before any agent process starts; a fault raised while grading
+    reaches the agent only as the ordinary 'received' status."""
+    from auditenv.env import AuditEnv
+    from auditenv.truth import TruthFormatError
+
     e = episode(5, CLEAN_CONFIG)
     broken = Episode(public=e.public, truth={"episode_id": e.episode_id, "issues": None, "note": "ISS-BROKEN"},
                      provenance=e.provenance)
-    run = run_isolated("reference_solver", 5, episode=broken, mode="train")
-    assert run.result["outcome"] == "evaluator_error" and "TypeError" in run.result["errors"][0]
-    last = json.loads(run.sent_messages[-1])
-    assert last["reward"] == 0.0 and last["observation"]["error"] is None
-    assert "ISS-BROKEN" not in "".join(run.sent_messages) and "TypeError" not in "".join(run.sent_messages)
+    before = {d for d in os.listdir(tempfile.gettempdir()) if d.startswith("auditenv-agent-")}
+    with pytest.raises(TruthFormatError):
+        run_isolated("reference_solver", 5, episode=broken, mode="train")
+    assert {d for d in os.listdir(tempfile.gettempdir()) if d.startswith("auditenv-agent-")} == before
+
+    env = AuditEnv(episode_factory=lambda s, c: e)
+    env.reset(5, {"mode": "train"})
+    env._grader._truth["issues"] = None  # fault inside the evaluator after a valid start
+    obs, reward, terminated, _, info = env.step({"action": "submit", "args": {"episode_id": e.episode_id, "findings": []}})
+    assert terminated and reward == 0.0 and obs == {"result": {"status": "received"}, "error": None, "steps_remaining": 99}
+    assert env.closed_result()["outcome"] == "evaluator_error" and "TypeError" in env.closed_result()["errors"][0]
+    assert "TypeError" not in json.dumps([obs, info])
 
 
 def test_no_agent_directories_or_truth_files_are_left_in_temp(ep):

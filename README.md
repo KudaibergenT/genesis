@@ -4,21 +4,58 @@
 расследования, скрытые причинно внесённые ошибки и терминальная награда. Python 3.11,
 только стандартная библиотека, без сети, GPU и платных API.
 
-Статус: **этап 2**. Реализованы четыре типа ошибок (`duplicate_invoice`, `payment_allocation`,
-`fx_conversion`, `period_cutoff`), два сценария взаимодействующих ошибок (`fx_partial_at_cutoff`,
-`allocation_with_fx`), чистые компании и отвлекающие случаи. Изоляция агента в отдельном процессе и
-Docker — этап 3.
+Статус: **этап 3**. Четыре типа ошибок (`duplicate_invoice`, `payment_allocation`, `fx_conversion`,
+`period_cutoff`), два сценария взаимодействующих ошибок, чистые компании и отвлекающие случаи; агент
+работает в отдельном процессе (JSONL), официальная проверка — офлайн в Docker одной командой.
+
+## Официальная проверка (одна команда)
+
+```bash
+scripts/docker_run_all.sh       # docker build + run_all.py в контейнере: без сети, 2 CPU, 4 ГБ,
+                                # read-only FS, cap-drop ALL; отчёт: results/docker_run_all/run_all.{json,csv}
+python3.11 scripts/run_all.py   # то же без Docker (нужны pytest/hypothesis из requirements-dev.lock)
+```
+
+`run_all.py` проверяет версии Python и зависимостей, сеть и лимиты, размер решения; генерирует эпизоды
+и сверяет golden-хэши; проверяет reset/step, matcher и награду; запускает четыре базовые политики
+(не-oracle — в изолированных процессах); атакует песочницу; проверяет таймаут 60 с; запускает все
+тесты; пишет `run_all.json` и `run_all.csv`. Код выхода 0 — только если все проверки пройдены.
+Флаги: `--quick` (без stage2_eval, таймаут 5 с), `--skip-tests`, `--require-offline`, `--require-limits`.
+
+## Изоляция агента
+
+Агент запускается `auditenv.sandbox.runner.run_isolated(policy, seed, ...)` отдельным процессом
+`python -I -B`; наблюдения и действия — JSON Lines через stdin/stdout:
+
+```
+→ {"type":"observation","observation":{...},"reward":0.0,"terminated":false,"truncated":false}
+← {"action":"list_records","args":{"table":"ledger","cursor":null,"limit":50}}
+→ ... {"type":"end"}
+```
+
+- Среда, эталон и оценщик живут только в родительском процессе; агенту не передаются seed эпизода,
+  truth, provenance, награда в режиме eval и диагностика (TP/FP/FN, причины).
+- Агент получает только имя политики и собственный `--policy-seed`; рабочий каталог — пустой временный,
+  окружение — минимальное; каталог удаляется после эпизода.
+- В контейнере агент работает под uid 10001, файлы truth доступны только root, корневая ФС read-only,
+  сети нет. Внутри процесса агента audit hook блокирует subprocess, сокеты, ctypes, запись файлов и
+  чтение вне стандартной библиотеки и кода пакета.
+- Жёсткий лимит 60 с на эпизод (wall clock), RLIMIT_CPU/FSIZE/NOFILE (и AS/NPROC в Linux), по
+  истечении — SIGKILL группе процессов и `truncated=true` с пустым ответом.
+- Oracle требует эталон и поэтому выполняется только на стороне оценщика (`run_official`).
+- Свой агент: `run_isolated("package.module:PolicyClass", ...)` — класс с `reset(seed)` и `act(observation)`.
 
 ## Быстрый старт
 
 ```bash
-make venv        # Python 3.11 venv + pytest/hypothesis (только для тестов)
+make venv        # Python 3.11 venv + pytest/hypothesis по хэшам (только для тестов)
 make test        # весь набор тестов
 make generate    # 10 train + 10 dev эпизодов в episodes/
 make baselines   # базовые политики, траектории и итоги в trajectories/ (train+dev и stage2_eval)
 make audit       # аудит данных → docs/data_audit.md
 make reward-analysis  # анализ награды для k = 0..12 → docs/reward_analysis.md
-make verify      # test + audit + baselines
+make run-all     # scripts/run_all.py на хосте
+make docker-run-all   # официальная проверка в контейнере
 ```
 
 Набор `stage2_eval` — 30 эпизодов: 6 чистых, 6 с обоими сценариями взаимодействия, 6 с

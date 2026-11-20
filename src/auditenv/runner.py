@@ -41,14 +41,16 @@ def _record(episode_id: str, step: int, action: Any, obs: Dict[str, Any], reward
 
 
 def run_episode(policy: Policy, seed: int, config: Optional[Dict[str, Any]] = None, mode: str = "train",
-                time_limit_s: float = EPISODE_TIME_LIMIT_S, episode: Optional[Episode] = None) -> EpisodeRun:
+                time_limit_s: float = EPISODE_TIME_LIMIT_S, episode: Optional[Episode] = None,
+                policy_seed: Optional[int] = None) -> EpisodeRun:
+    """In-process run (training/development). Official evaluation uses auditenv.sandbox.runner."""
     gen_config = {k: v for k, v in (config or {}).items() if k != "mode"}
     if episode is None:
         episode = generate_episode(seed, gen_config)
     env = AuditEnv(episode_factory=lambda _seed, _cfg: episode)
     if policy.requires_truth:
         policy.bind_truth(episode.truth)  # type: ignore[attr-defined]
-    policy.reset(seed)
+    policy.reset(seed if policy_seed is None else policy_seed)
     start = time.perf_counter()
     obs, info = env.reset(seed, {"mode": mode})
     episode_id = info["episode_id"]

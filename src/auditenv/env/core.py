@@ -266,13 +266,23 @@ class AuditEnv:
         grade = self._finish(args, outcome="submitted", inspection_steps=self._steps - 1)
         result: Dict[str, Any] = {"status": "received"}
         error = None
-        if self._mode == "train" and not grade.valid:
+        if self._mode == "train" and grade.outcome == "malformed":
             error = {"code": "malformed_submission", "message": "; ".join(grade.errors)[:500]}
         obs = {"result": result, "error": error, "steps_remaining": max(self.max_steps - self._steps, 0)}
         return canon.json_copy(obs), self._visible_reward(grade), True, False, {"step": self._steps, "final": True}
 
     def _finish(self, submission: Any, outcome: str, inspection_steps: int) -> Grade:
-        grade = self._grader.grade(submission, inspection_steps=inspection_steps, outcome=outcome)
+        try:
+            grade = self._grader.grade(submission, inspection_steps=inspection_steps, outcome=outcome)
+        except Exception as exc:  # an evaluator fault must never reach the agent
+            grade = Grade(
+                reward=-1.0,
+                valid=False,
+                outcome="evaluator_error",
+                inspection_steps=inspection_steps,
+                metrics={"tp": 0, "fp": 0, "fn": 0, "precision": 0.0, "recall": 0.0, "f1": 0.0, "reward": -1.0},
+                errors=[f"evaluator raised {type(exc).__name__}: {exc}"[:500]],
+            )
         self._grade = grade
         self._done = True
         self._terminated = outcome == "submitted"
@@ -280,4 +290,6 @@ class AuditEnv:
         return grade
 
     def _visible_reward(self, grade: Grade) -> float:
-        return grade.reward if self._mode == "train" else 0.0
+        if self._mode != "train" or grade.outcome == "evaluator_error":
+            return 0.0
+        return grade.reward

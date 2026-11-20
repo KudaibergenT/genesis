@@ -1,0 +1,10 @@
+# Hash-locked test dependencies (pure-Python wheels). Install with:
+#   pip install --no-deps --require-hashes -r requirements-dev.lock
+# The environment itself has no runtime dependencies beyond the Python 3.11 standard library.
+attrs==26.1.0 --hash=sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309
+hypothesis==6.122.3 --hash=sha256:f0f57036d3b95b979491602b32c95b6725c3af678cccb6165d8de330857f3c83
+iniconfig==2.3.1 --hash=sha256:9121e2c1fdb355232495be3194c8dfe87ccc2d5dee45947b78e68f499790d7a7
+packaging==26.3 --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
+pluggy==1.7.0 --hash=sha256:7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec
+pytest==8.3.4 --hash=sha256:50e16d954148559c9a74109af1eaf0c945ba2d8f30f0a3d3335edde19788b6f6
+sortedcontainers==2.4.0 --hash=sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0

@@ -53,7 +53,7 @@
     "credit_notes": "invoices with negative total_minor are credit notes (AR credit, 4100 Sales Returns debit); payments with negative amount_minor are refunds paid to the customer",
     "currency": "KZT",
     "entries": "rows of one journal entry share the same timestamp",
-    "null_references": "missing references are null; links are never guessed",
+    "null_references": "missing references are explicit null (CSV token null, JSON null); links are never guessed",
     "posting_date": "documents are posted at their own timestamp: invoices at issued_at, payments at timestamp"
   },
   "period": {

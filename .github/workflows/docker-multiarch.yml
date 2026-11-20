@@ -1,0 +1,46 @@
+# Native verification on both architectures: every job builds the image on its own runner
+# and runs the full offline verification with the official limits (no emulation).
+name: docker-multiarch
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Host architecture
+        run: test "$(uname -m)" = "${{ matrix.arch }}"
+
+      - name: Build and run the offline verification in the container
+        run: scripts/docker_run_all.sh
+
+      - name: Check report and container architecture
+        run: |
+          python3 - <<'EOF'
+          import json
+          report = json.load(open("results/docker_run_all/run_all.json"))
+          machine = next(c["details"]["machine"] for c in report["checks"] if c["check"] == "python_3_11")
+          assert machine == "${{ matrix.arch }}", machine
+          assert report["summary"]["ok"] and report["summary"]["failed"] == 0, report["summary"]
+          print(json.dumps(report["summary"], indent=2))
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: run_all-${{ matrix.arch }}
+          path: results/docker_run_all/

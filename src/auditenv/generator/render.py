@@ -244,6 +244,8 @@ def render(world: World, books: Books, lines: List[LedgerLine], cfg: Dict[str, A
         "rounding": {"mode": world.rounding, "unit": "minor"},
         "currency_exponents": {c: money.EXPONENTS[c] for c in currencies},
         "money_format": "integer minor units; exponent per currency_exponents",
+        "null_representation": "missing references are explicit null: JSON null in JSON/JSONL, the unquoted "
+                               "token null in CSV; an empty CSV field is invalid",
         "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
         "issue_types": list(ISSUE_TYPES),
         "files": ["manifest.json", "ledger.csv", "invoices.jsonl", "payments.jsonl", "fx.csv", "policy.json"],
@@ -262,7 +264,8 @@ def build_policy(world: World) -> Dict[str, Any]:
             "posting_date": "documents are posted at their own timestamp: invoices at issued_at, payments at timestamp",
             "credit_notes": "invoices with negative total_minor are credit notes (AR credit, 4100 Sales Returns debit); "
                             "payments with negative amount_minor are refunds paid to the customer",
-            "null_references": "missing references are null; links are never guessed",
+            "null_references": "missing references are explicit null (CSV token null, JSON null); "
+                               "links are never guessed",
         },
         "fx": {
             "quote": "1 unit of source_currency = rate units of target_currency",

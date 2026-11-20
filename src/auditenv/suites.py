@@ -65,5 +65,17 @@ def audit_suite(seeds_per_case: int = 5) -> Iterator[Tuple[str, int, Dict[str, A
             yield f"clean/{zone}/{payment_zone}", 9000, clean_in(zone, payment_zone)
 
 
+JUDGE_MATRIX = (
+    [("clean", s) for s in (201, 202, 203, 204, 205)]
+    + [("duplicate_invoice", s) for s in (206, 207, 208)]
+    + [("payment_allocation_missing", 209), ("payment_allocation_partial", 210), ("payment_allocation_partial", 211)]
+    + [("fx_conversion", s) for s in (212, 213)]
+    + [("period_cutoff", s) for s in (214, 215)]
+    + [("interaction_fx_partial_at_cutoff", s) for s in (216, 217, 218)]
+    + [("interaction_allocation_with_fx", s) for s in (219, 220)]
+)
+"""(scenario config name in configs/scenarios, seed) for D01..D20 of the published jury matrix."""
+
+
 def case_names() -> List[str]:
     return sorted({name for name, _, _ in audit_suite(1)})

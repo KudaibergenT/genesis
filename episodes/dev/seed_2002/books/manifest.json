@@ -22,7 +22,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.3.0",
+  "generator_version": "0.3.1",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",
@@ -30,6 +30,7 @@
     "period_cutoff"
   ],
   "money_format": "integer minor units; exponent per currency_exponents",
+  "null_representation": "missing references are explicit null: JSON null in JSON/JSONL, the unquoted token null in CSV; an empty CSV field is invalid",
   "period_end": "2026-09-30",
   "period_start": "2026-09-01",
   "review_window_end": "2026-10-05",

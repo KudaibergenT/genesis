@@ -424,12 +424,15 @@ def verify_episode(books: PublicBooks, truth: Dict[str, Any]) -> List[str]:
     if not LIMITS["issues"][0] <= len(issues) <= LIMITS["issues"][1]:
         problems.append(f"issue count {len(issues)} outside {LIMITS['issues']}")
 
-    keys = [(i["type"], tuple(i["affected_ids"])) for i in issues]
+    def key_of(i: Dict[str, Any]) -> Tuple[str, Tuple[str, ...]]:
+        return i["type"], tuple(sorted(i["affected_ids"]))  # affected_ids is a set; list order carries no meaning
+
+    keys = [key_of(i) for i in issues]
     if len(set(keys)) != len(keys):
         problems.append("truth keys (type, affected_ids) are not unique")
     for issue in issues:
-        if list(issue["affected_ids"]) != sorted(set(issue["affected_ids"])):
-            problems.append(f"{issue['issue_id']}: affected_ids not canonical")
+        if len(set(issue["affected_ids"])) != len(issue["affected_ids"]):
+            problems.append(f"{issue['issue_id']}: affected_ids contain duplicates")
         if not issue["evidence_sets"]:
             problems.append(f"{issue['issue_id']}: no evidence sets")
         for evidence in issue["evidence_sets"]:
@@ -440,12 +443,13 @@ def verify_episode(books: PublicBooks, truth: Dict[str, Any]) -> List[str]:
             except EvidenceError as exc:
                 problems.append(f"{issue['issue_id']}: insufficient evidence {evidence}: {exc}")
                 continue
-            claimed = (tuple(issue["affected_ids"]), issue["expected_amount_minor"], issue["currency"])
-            if derived[0] != claimed[0] or derived[2] != claimed[2] or abs(derived[1] - claimed[1]) > issue["tolerance_minor"]:
+            claimed = (tuple(sorted(issue["affected_ids"])), issue["expected_amount_minor"], issue["currency"])
+            if tuple(sorted(derived[0])) != claimed[0] or derived[2] != claimed[2] \
+                    or abs(derived[1] - claimed[1]) > issue["tolerance_minor"]:
                 problems.append(f"{issue['issue_id']}: evidence derives {derived}, truth says {claimed}")
 
-    detected = {(d.type, d.affected_ids): d for d in detect_issues(books)}
-    truth_by_key = {(i["type"], tuple(i["affected_ids"])): i for i in issues}
+    detected = {(d.type, tuple(sorted(d.affected_ids))): d for d in detect_issues(books)}
+    truth_by_key = {key_of(i): i for i in issues}
     for key in sorted(set(detected) - set(truth_by_key)):
         problems.append(f"undeclared discrepancy detected: {key}")
     for key in sorted(set(truth_by_key) - set(detected)):

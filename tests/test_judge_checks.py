@@ -14,7 +14,7 @@ import pytest
 import judge_adapter as ja
 from auditenv import checks
 from auditenv.audit import load_episode, pre_injection_books
-from auditenv.books import FX_COLUMNS, LEDGER_COLUMNS, fx_key
+from auditenv.books import FX_COLUMNS, LEDGER_COLUMNS, NULL_TOKEN, fx_key
 from auditenv.rng import Rng
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -34,7 +34,7 @@ def read_dir(d):
     for r in ledger:
         r["debit_minor"], r["credit_minor"] = int(r["debit_minor"]), int(r["credit_minor"])
         for k in ("entity_id", "invoice_id", "payment_id"):
-            r[k] = r[k] or None
+            r[k] = None if r[k] == NULL_TOKEN else r[k]
     return {
         "manifest": json.loads(text("manifest.json")), "policy": json.loads(text("policy.json")),
         "ledger": ledger, "invoices": [json.loads(x) for x in text("invoices.jsonl").splitlines()],
@@ -53,7 +53,7 @@ def write_dir(d, data):
             w = csv.writer(fh, lineterminator="\n")
             w.writerow(cols)
             for r in rows:
-                w.writerow(["" if r[c] is None else r[c] for c in cols])
+                w.writerow([NULL_TOKEN if r[c] is None else r[c] for c in cols])
     for name in ("invoices", "payments"):
         with open(os.path.join(d, f"{name}.jsonl"), "w", encoding="utf-8") as fh:
             fh.write("".join(json.dumps(r) + "\n" for r in data[name]))

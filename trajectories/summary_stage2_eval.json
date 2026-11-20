@@ -52,7 +52,7 @@
     "mean_episode_f1": 0.2,
     "return": -0.6,
     "inspection_steps": 0.0,
-    "wall_time_s": 0.0014
+    "wall_time_s": 0.0015
   },
   {
     "policy": "reference_solver",

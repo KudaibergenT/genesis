@@ -53,8 +53,10 @@ ja.score_episode(output_dir, findings_json, inspection_steps)
   запись / документ; `calculator` → десятичная строка (`"0.3"`); `submit` → `{"accepted": true}` либо
   ошибка `invalid_submission` (только структура, без оценки правильности).
 - Таблицы: `ledger` (id `row_id`), `invoices` и `payments` (id `doc_id`), `fx` (id
-  `date|source_currency|target_currency`, например `2026-03-14|EUR|KZT`). В CSV отсутствующая ссылка —
-  пустое поле, в JSON и наблюдениях — `null`.
+  `date|source_currency|target_currency`, например `2026-03-14|EUR|KZT`). Отсутствующая ссылка — всегда
+  явный null: в CSV токен `null` (без кавычек), в JSON/JSONL и наблюдениях — JSON `null`. Пустое поле в
+  CSV — ошибка формата (загрузчик её отвергает); `null` допустим только в `entity_id`, `invoice_id`,
+  `payment_id` журнала. Это же записано в `manifest.null_representation` и `policy.ledger.null_references`.
 - Лимит 60 с от reset: шаг после истечения возвращает `truncated=true`, пустые findings.
   Submit — одно из 100 действий, в `inspection_steps` не входит.
 - Закрытый режим: `reward` всегда числовой 0; после эпизода `env.submitted_findings()` и
@@ -101,8 +103,17 @@ ID сравниваются точно; `affected_ids` и `evidence_ids` — м�
 | D19–D20 | `interaction_allocation_with_fx.json` | неполное распределение валютного платежа + неверный курс |
 
 Самопроверка по опубликованным определениям: `tests/test_judge_checks.py` (C01–C20, тесты 1–20
-блока 3, M01–M12, матрица D01–D20, парные проверки P01–P20 с перестановкой и согласованной сменой
-ID во всех файлах и эталоне).
+блока 3, M01–M12, матрица D01–D20). Парные проверки P01–P20 отдельной командой
+`python3.11 scripts/paired_checks.py` (результаты в `results/paired_checks/`): эпизоды D01–D20
+генерируются через адаптер, копия получает перестановку строк журнала, документов и курсов и/или
+согласованную замену `row_id`, `doc_id`, `invoice_id`, `payment_id`, `entity_id` во всех файлах,
+truth и provenance плюс новое название компании; oracle отвечает новыми ID, эталонный решатель
+работает в изолированном процессе; сравниваются число и типы ошибок, `affected_ids` после обратного
+отображения, F1, награда и повторяемость (`src/auditenv/paired.py`, `tests/test_paired.py`).
+
+**Архитектуры.** `PLATFORM=linux/amd64 scripts/docker_run_all.sh` собирает и проверяет образ для
+другой архитектуры (на Apple Silicon — под эмуляцией). Нативная проверка arm64 и x86-64 —
+`.github/workflows/docker-multiarch.yml` (раннеры `ubuntu-24.04` и `ubuntu-24.04-arm`).
 
 ## Изоляция агента
 

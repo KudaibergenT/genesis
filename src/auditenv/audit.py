@@ -88,11 +88,11 @@ def audit_episode(ep: Episode, check_clean_counterpart: bool = True) -> Dict[str
     by_mutation = {m["issue_id"]: m for m in mutations}
     for m in mutations:
         issue = by_id.get(m["issue_id"])
-        if issue is None or issue["type"] != m["operator"] or issue["affected_ids"] != m["affected_ids"]:
+        if issue is None or issue["type"] != m["operator"] or sorted(issue["affected_ids"]) != sorted(m["affected_ids"]):
             problems.append(f"mutation {m['issue_id']} does not match its truth issue")
         if m["linked_issue_id"] is not None:
             other = by_mutation.get(m["linked_issue_id"])
-            if other is None or other["linked_issue_id"] != m["issue_id"] or other["affected_ids"] != m["affected_ids"] \
+            if other is None or other["linked_issue_id"] != m["issue_id"] or sorted(other["affected_ids"]) != sorted(m["affected_ids"]) \
                     or other["scenario"] != m["scenario"] or other["operator"] == m["operator"]:
                 problems.append(f"interaction link of {m['issue_id']} is not reciprocal")
 

@@ -65,7 +65,8 @@ def env_checks(args) -> None:
     def python():
         version = platform.python_version()
         assert version.startswith("3.11."), f"Python 3.11 required, found {version}"
-        return {"python": version, "implementation": platform.python_implementation(), "platform": platform.platform()}
+        return {"python": version, "implementation": platform.python_implementation(), "platform": platform.platform(),
+                "machine": platform.machine()}
 
     def dependencies():
         found = {}
@@ -461,7 +462,23 @@ def judge_checks(args, out_dir: str) -> None:
             import shutil
             shutil.rmtree(directory, ignore_errors=True)
 
+    def paired():
+        from auditenv.paired import run_all_pairs
+        workdir = tempfile.mkdtemp(prefix="auditenv-paired-")
+        try:
+            pairs = run_all_pairs(ja, workdir)
+        finally:
+            import shutil
+            shutil.rmtree(workdir, ignore_errors=True)
+        with open(os.path.join(out_dir, "paired_checks.json"), "w", encoding="utf-8") as fh:
+            json.dump(pairs, fh, indent=2, default=str)
+        failed = [p["pair"] for p in pairs if not p["passed"]]
+        assert not failed, f"failed pairs: {failed}"
+        return {"pairs_passed": len(pairs), "f1_and_return_equal": all(p["f1"][0] == p["f1"][1] and
+                                                                         p["return"][0] == p["return"][1] for p in pairs)}
+
     check("judge", "published_definitions", definitions)
+    check("judge", "paired_checks_P01_P20", paired)
     check("judge", "adapter_time_limit", adapter_time_limit)
 
 

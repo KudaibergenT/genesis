@@ -15,6 +15,10 @@ FX_COLUMNS = ("date", "source_currency", "target_currency", "rate")
 LEDGER_INT_COLUMNS = ("debit_minor", "credit_minor")
 LEDGER_NULLABLE = ("entity_id", "invoice_id", "payment_id")
 
+# Missing references are an explicit null everywhere: JSON null in JSON/JSONL and in observations,
+# the unquoted token `null` in CSV. An empty CSV field is a format error, never an implicit null.
+NULL_TOKEN = "null"
+
 TABLES = ("ledger", "invoices", "payments", "fx")
 PRIMARY_KEYS = {"ledger": "row_id", "invoices": "doc_id", "payments": "doc_id", "fx": "fx_key"}
 
@@ -41,7 +45,16 @@ def _csv_text(rows: List[Dict[str, Any]], columns) -> str:
     writer = csv.writer(buf, lineterminator="\n")
     writer.writerow(columns)
     for row in rows:
-        writer.writerow(["" if row[c] is None else row[c] for c in columns])
+        values = []
+        for c in columns:
+            value = row[c]
+            if value is None:
+                values.append(NULL_TOKEN)
+            elif value == "" or value == NULL_TOKEN:
+                raise ValueError(f"column {c}: empty or reserved value {value!r}")
+            else:
+                values.append(value)
+        writer.writerow(values)
     return buf.getvalue()
 
 
@@ -72,21 +85,32 @@ def load_books(directory: str) -> PublicBooks:
         with open(os.path.join(directory, name), encoding="utf-8", newline="") as fh:
             return fh.read()
 
-    def read_csv(name: str) -> List[Dict[str, Any]]:
-        return list(csv.DictReader(io.StringIO(read(name))))
+    def read_csv(name: str, columns, nullable=()) -> List[Dict[str, Any]]:
+        reader = csv.DictReader(io.StringIO(read(name)))
+        if tuple(reader.fieldnames or ()) != tuple(columns):
+            raise ValueError(f"{name}: columns must be {list(columns)}")
+        rows = []
+        for n, row in enumerate(reader, start=2):
+            for col in columns:
+                value = row[col]
+                if value == "" or value is None:
+                    raise ValueError(f"{name} line {n}: empty field {col}; missing references must be '{NULL_TOKEN}'")
+                if value == NULL_TOKEN:
+                    if col not in nullable:
+                        raise ValueError(f"{name} line {n}: {col} cannot be null")
+                    row[col] = None
+            rows.append(row)
+        return rows
 
-    ledger = []
-    for row in read_csv("ledger.csv"):
+    ledger = read_csv("ledger.csv", LEDGER_COLUMNS, LEDGER_NULLABLE)
+    for row in ledger:
         for col in LEDGER_INT_COLUMNS:
             row[col] = int(row[col])
-        for col in LEDGER_NULLABLE:
-            row[col] = row[col] or None
-        ledger.append(row)
     return PublicBooks(
         manifest=json.loads(read("manifest.json")),
         policy=json.loads(read("policy.json")),
         ledger=ledger,
         invoices=[json.loads(line) for line in read("invoices.jsonl").splitlines() if line],
         payments=[json.loads(line) for line in read("payments.jsonl").splitlines() if line],
-        fx=read_csv("fx.csv"),
+        fx=read_csv("fx.csv", FX_COLUMNS),
     )

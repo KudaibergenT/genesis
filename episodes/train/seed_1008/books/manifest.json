@@ -2,11 +2,11 @@
   "base_currency": "USD",
   "company": "Orchard Labs LLP",
   "counts": {
-    "documents": 65,
+    "documents": 66,
     "fx_rates": 68,
     "invoices": 38,
-    "ledger_rows": 345,
-    "payments": 27
+    "ledger_rows": 348,
+    "payments": 28
   },
   "currency_exponents": {
     "CNY": 2,
@@ -22,7 +22,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",

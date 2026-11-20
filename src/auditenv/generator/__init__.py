@@ -47,6 +47,25 @@ class Episode:
         return self.public.manifest["episode_id"]
 
 
+def _diff(before: PublicBooks, after: PublicBooks) -> Dict[str, Any]:
+    """Every open record the injections added, removed or modified, with full before/after values.
+    Applying it in reverse to the open files reproduces the pre-injection books exactly."""
+    out: Dict[str, Any] = {}
+    for table, key in (("ledger", "row_id"), ("invoices", "doc_id"), ("payments", "doc_id")):
+        b = {r[key]: r for r in getattr(before, table)}
+        a = {r[key]: r for r in getattr(after, table)}
+        out[table] = {
+            "added": [a[k] for k in sorted(a.keys() - b.keys())],
+            "removed": [b[k] for k in sorted(b.keys() - a.keys())],
+            "modified": [{"before": b[k], "after": a[k]} for k in sorted(a.keys() & b.keys()) if a[k] != b[k]],
+        }
+    if canon.dumps(sorted(before.fx, key=canon.dumps)) != canon.dumps(sorted(after.fx, key=canon.dumps)):
+        raise GenerationError("error injection must not change the FX table")
+    out["fx"] = "unchanged"
+    out["manifest_counts_before"] = before.manifest["counts"]
+    return out
+
+
 def _check_seed(seed: Any) -> int:
     if isinstance(seed, bool) or not isinstance(seed, int) or seed < 0:
         raise ValueError("seed must be a non-negative int")
@@ -119,6 +138,17 @@ def generate_episode(seed: int, config: Any = None) -> Episode:
     def issue_id(key: str) -> str:
         return "ISS-" + ids.token("issue", key, 8)
 
+    def to_surface(value: Any) -> Any:
+        if isinstance(value, str):
+            if value.startswith("fx:"):
+                return value[3:]
+            return ids.map.get(value, value)
+        if isinstance(value, dict):
+            return {k: to_surface(v) for k, v in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [to_surface(v) for v in value]
+        return value
+
     truth_issues = []
     for issue in issues:
         truth_issues.append({
@@ -155,9 +185,11 @@ def generate_episode(seed: int, config: Any = None) -> Episode:
                 "affected": list(i.affected),
                 "affected_ids": sorted(surface(k) for k in i.affected),
                 "params": _jsonable(i.params),
+                "params_surface": to_surface(_jsonable(i.params)),
             }
             for i in issues
         ],
+        "changes": _diff(clean_public, public),
         "id_map": dict(sorted(ids.map.items())),
     }
 
@@ -167,9 +199,12 @@ def generate_episode(seed: int, config: Any = None) -> Episode:
     return Episode(public=public, truth=truth, provenance=provenance)
 
 
-def write_episode(episode: Episode, directory: str) -> None:
-    write_books(episode.public, os.path.join(directory, "books"))
-    private = os.path.join(directory, "truth")
+def write_episode(episode: Episode, directory: str, layout: str = "split") -> None:
+    """layout="split": books/ (open) and truth/ (closed); layout="flat": all eight files in one directory."""
+    if layout not in ("split", "flat"):
+        raise ValueError("layout must be 'split' or 'flat'")
+    write_books(episode.public, directory if layout == "flat" else os.path.join(directory, "books"))
+    private = directory if layout == "flat" else os.path.join(directory, "truth")
     os.makedirs(private, exist_ok=True)
     for name, obj in (("truth.json", episode.truth), ("provenance.json", episode.provenance)):
         with open(os.path.join(private, name), "w", encoding="utf-8") as fh:

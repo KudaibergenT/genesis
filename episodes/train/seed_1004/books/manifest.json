@@ -2,11 +2,11 @@
   "base_currency": "EUR",
   "company": "Meridian Retail Ltd",
   "counts": {
-    "documents": 103,
+    "documents": 111,
     "fx_rates": 31,
     "invoices": 67,
-    "ledger_rows": 462,
-    "payments": 36
+    "ledger_rows": 482,
+    "payments": 44
   },
   "currency_exponents": {
     "CNY": 2,
@@ -21,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",

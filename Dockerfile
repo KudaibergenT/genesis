@@ -19,7 +19,7 @@ WORKDIR /app
 COPY requirements-dev.lock ./
 RUN pip install --no-deps --require-hashes -r requirements-dev.lock
 
-COPY pyproject.toml README.md LICENSE ./
+COPY pyproject.toml README.md LICENSE judge_adapter.py ./
 COPY src ./src
 COPY configs ./configs
 COPY episodes ./episodes

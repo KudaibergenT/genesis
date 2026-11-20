@@ -2,11 +2,11 @@
   "base_currency": "USD",
   "company": "Harbor Textiles LLP",
   "counts": {
-    "documents": 72,
+    "documents": 68,
     "fx_rates": 66,
     "invoices": 44,
-    "ledger_rows": 386,
-    "payments": 28
+    "ledger_rows": 383,
+    "payments": 24
   },
   "currency_exponents": {
     "GBP": 2,
@@ -22,7 +22,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",

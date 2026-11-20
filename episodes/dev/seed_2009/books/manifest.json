@@ -2,11 +2,11 @@
   "base_currency": "KZT",
   "company": "Basalt Optics GmbH",
   "counts": {
-    "documents": 58,
+    "documents": 70,
     "fx_rates": 34,
     "invoices": 39,
-    "ledger_rows": 391,
-    "payments": 19
+    "ledger_rows": 410,
+    "payments": 31
   },
   "currency_exponents": {
     "EUR": 2,
@@ -21,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",

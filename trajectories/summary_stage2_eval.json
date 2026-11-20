@@ -13,13 +13,13 @@
   {
     "policy": "simple_reconciler",
     "episodes": 30,
-    "micro_precision": 0.191,
-    "micro_recall": 0.789,
-    "micro_f1": 0.307,
-    "mean_episode_f1": 0.278,
-    "return": -0.469,
+    "micro_precision": 0.174,
+    "micro_recall": 0.754,
+    "micro_f1": 0.282,
+    "mean_episode_f1": 0.256,
+    "return": -0.514,
     "inspection_steps": 15.5,
-    "wall_time_s": 0.0026
+    "wall_time_s": 0.0028
   },
   {
     "policy": "flag_everything",
@@ -30,7 +30,7 @@
     "mean_episode_f1": 0.0,
     "return": -1.0,
     "inspection_steps": 2.0,
-    "wall_time_s": 0.0016
+    "wall_time_s": 0.0017
   },
   {
     "policy": "oracle",
@@ -41,7 +41,7 @@
     "mean_episode_f1": 1.0,
     "return": 1.0,
     "inspection_steps": 0.0,
-    "wall_time_s": 0.0012
+    "wall_time_s": 0.0013
   },
   {
     "policy": "silence",
@@ -52,7 +52,7 @@
     "mean_episode_f1": 0.2,
     "return": -0.6,
     "inspection_steps": 0.0,
-    "wall_time_s": 0.0011
+    "wall_time_s": 0.0014
   },
   {
     "policy": "reference_solver",
@@ -63,6 +63,6 @@
     "mean_episode_f1": 1.0,
     "return": 0.969,
     "inspection_steps": 15.5,
-    "wall_time_s": 0.0027
+    "wall_time_s": 0.003
   }
 ]

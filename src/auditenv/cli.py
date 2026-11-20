@@ -92,6 +92,7 @@ def cmd_baselines(args: argparse.Namespace) -> int:
     episodes = [(seed, cfg) for split in args.split for seed, cfg in split_episodes(split)]
     tag = "" if args.split == ["train", "dev"] else "_".join(args.split) + "_"
     summary = []
+    combined = []
     for name in names:
         trajectories, results = [], []
         for seed, cfg in episodes:
@@ -100,6 +101,8 @@ def cmd_baselines(args: argparse.Namespace) -> int:
             results.append({"episode_id": run.episode_id, "seed": seed, "steps": run.steps,
                             "wall_time_s": round(run.wall_time_s, 4), **run.result})
         write_jsonl(os.path.join(args.out, f"trajectories_{tag}{name}.jsonl"), trajectories)
+        if name in OFFICIAL_BASELINES:
+            combined.extend({**t, "policy": name} for t in trajectories)
         write_jsonl(os.path.join(args.out, f"results_{tag}{name}.jsonl"), results)
         mean = lambda key: statistics.fmean(r["metrics"][key] for r in results)  # noqa: E731
         tp, fp, fn = (sum(r["metrics"][k] for r in results) for k in ("tp", "fp", "fn"))
@@ -114,6 +117,8 @@ def cmd_baselines(args: argparse.Namespace) -> int:
             "inspection_steps": round(statistics.fmean(r["inspection_steps"] for r in results), 1),
             "wall_time_s": round(statistics.fmean(r["wall_time_s"] for r in results), 4),
         })
+    if not tag:
+        write_jsonl(os.path.join(args.out, "trajectories.jsonl"), combined)
     with open(os.path.join(args.out, f"summary_{tag}".rstrip("_") + ".json"), "w", encoding="utf-8") as fh:
         json.dump(summary, fh, indent=2)
         fh.write("\n")

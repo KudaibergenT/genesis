@@ -418,11 +418,58 @@ def timeout_checks(args) -> None:
     check("timeout", "busy_loop_agent_3s", slow("attack_busy_loop", 3.0))
 
 
-# ---------------------------------------------------------------------------- 8. tests
+# ---------------------------------------------------------------------------- 8. jury definitions
+def judge_checks(args, out_dir: str) -> None:
+    sys.path.insert(0, ROOT)
+    import judge_adapter as ja
+
+    def definitions():
+        junit = os.path.join(out_dir, "junit_judge.xml")
+        env = dict(os.environ, PYTHONPATH=os.pathsep.join([os.path.join(ROOT, "src"), ROOT]), PYTHONHASHSEED="0")
+        proc = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-o", "addopts=",
+                               f"--junitxml={junit}", "tests/test_judge_checks.py"], cwd=ROOT, env=env,
+                              capture_output=True, text=True)
+        blocks: Dict[str, Dict[str, int]] = {}
+        for case in ET.parse(junit).getroot().iter("testcase"):
+            name = case.get("name", "")
+            block = ("block1_contract_C01_C20" if name.startswith("test_c") else
+                     "block2_matrix_D01_D20" if name.startswith("test_matrix") else
+                     "block4_paired_P01_P20" if name.startswith("test_paired") else "block3_matcher_reward_and_M01_M12")
+            failed = case.find("failure") is not None or case.find("error") is not None
+            entry = blocks.setdefault(block, {"passed": 0, "failed": 0})
+            entry["failed" if failed else "passed"] += 1
+        assert proc.returncode == 0 and all(b["failed"] == 0 for b in blocks.values()), blocks
+        return blocks
+
+    def adapter_time_limit():
+        directory = tempfile.mkdtemp(prefix="auditenv-judge-")
+        try:
+            ja.generate_episode(2001, {"max_issues": 0}, directory)
+            env = ja.make_env()
+            limit = 2.0 if args.quick else ja.TIME_LIMIT_S
+            saved, ja.TIME_LIMIT_S = ja.TIME_LIMIT_S, limit
+            try:
+                env.reset(0, {"mode": "closed", "episode_dir": directory, "team_config": {}})
+            finally:
+                ja.TIME_LIMIT_S = saved
+            env.step({"name": "list_records", "args": {"table": "ledger", "cursor": None, "limit": 50}})
+            time.sleep(limit + 0.5)
+            obs, reward, terminated, truncated, _ = env.step({"name": "calculator", "args": {"expression": "1"}})
+            assert truncated and not terminated and reward == 0.0 and env.submitted_findings() is None
+            return {"limit_s": limit, "error": obs["error"]["code"], "findings": "empty"}
+        finally:
+            import shutil
+            shutil.rmtree(directory, ignore_errors=True)
+
+    check("judge", "published_definitions", definitions)
+    check("judge", "adapter_time_limit", adapter_time_limit)
+
+
+# ---------------------------------------------------------------------------- 9. tests
 def test_checks(args, out_dir: str) -> None:
     def pytest_run():
         junit = os.path.join(out_dir, "junit.xml")
-        env = dict(os.environ, PYTHONPATH=os.path.join(ROOT, "src"), PYTHONHASHSEED="0")
+        env = dict(os.environ, PYTHONPATH=os.pathsep.join([os.path.join(ROOT, "src"), ROOT]), PYTHONHASHSEED="0")
         proc = subprocess.run([sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-o", "addopts=",
                                f"--junitxml={junit}", "tests"], cwd=ROOT, env=env, capture_output=True, text=True)
         suite = ET.parse(junit).getroot()
@@ -458,6 +505,7 @@ def main(argv=None) -> int:
         baseline_checks(args, args.out)
     isolation_checks(args)
     timeout_checks(args)
+    judge_checks(args, args.out)
     if not args.skip_tests:
         test_checks(args, args.out)
 

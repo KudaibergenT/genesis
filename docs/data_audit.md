@@ -18,26 +18,26 @@
 
 | эпизод | ошибок | типы | сценарии | строк | документов | пояс | база | округление | проблемы |
 |---|---|---|---|---|---|---|---|---|---|
-| train/1001 | 0 | — | — | 650 | 107 | Asia/Tokyo | USD | ROUND_HALF_UP | 0 |
-| train/1002 | 7 | duplicate_invoice×2, fx_conversion×3, payment_allocation×1, period_cutoff×1 | fx_partial_at_cutoff | 443 | 90 | UTC | EUR | ROUND_HALF_EVEN | 0 |
-| train/1003 | 8 | duplicate_invoice×1, fx_conversion×2, payment_allocation×3, period_cutoff×2 | allocation_with_fx, fx_partial_at_cutoff | 463 | 71 | Asia/Almaty | USD | ROUND_HALF_UP | 0 |
-| train/1004 | 0 | — | — | 462 | 103 | America/Bogota | EUR | ROUND_HALF_EVEN | 0 |
-| train/1005 | 7 | duplicate_invoice×2, fx_conversion×3, payment_allocation×1, period_cutoff×1 | allocation_with_fx, fx_partial_at_cutoff | 703 | 121 | Asia/Kolkata | USD | ROUND_HALF_EVEN | 0 |
-| train/1006 | 5 | duplicate_invoice×1, fx_conversion×2, payment_allocation×1, period_cutoff×1 | — | 535 | 64 | UTC | KZT | ROUND_HALF_EVEN | 0 |
-| train/1007 | 2 | payment_allocation×1, period_cutoff×1 | — | 521 | 84 | Asia/Almaty | EUR | ROUND_HALF_EVEN | 0 |
-| train/1008 | 3 | duplicate_invoice×1, fx_conversion×1, payment_allocation×1 | allocation_with_fx | 345 | 65 | Asia/Almaty | USD | ROUND_HALF_EVEN | 0 |
-| train/1009 | 8 | duplicate_invoice×2, fx_conversion×3, payment_allocation×1, period_cutoff×2 | allocation_with_fx, fx_partial_at_cutoff | 493 | 107 | Asia/Almaty | EUR | ROUND_HALF_EVEN | 0 |
-| train/1010 | 7 | duplicate_invoice×2, fx_conversion×2, period_cutoff×3 | fx_partial_at_cutoff | 386 | 72 | Asia/Dubai | USD | ROUND_HALF_EVEN | 0 |
-| dev/2001 | 0 | — | — | 608 | 112 | Asia/Almaty | EUR | ROUND_HALF_UP | 0 |
-| dev/2002 | 9 | duplicate_invoice×2, fx_conversion×2, payment_allocation×2, period_cutoff×3 | fx_partial_at_cutoff | 496 | 62 | Asia/Dubai | USD | ROUND_HALF_UP | 0 |
-| dev/2003 | 7 | duplicate_invoice×1, fx_conversion×3, payment_allocation×1, period_cutoff×2 | allocation_with_fx, fx_partial_at_cutoff | 561 | 65 | Asia/Dubai | USD | ROUND_HALF_UP | 0 |
-| dev/2004 | 0 | — | — | 449 | 71 | Asia/Kolkata | USD | ROUND_HALF_EVEN | 0 |
-| dev/2005 | 6 | duplicate_invoice×2, fx_conversion×2, period_cutoff×2 | — | 398 | 72 | UTC | EUR | ROUND_HALF_UP | 0 |
-| dev/2006 | 3 | duplicate_invoice×2, fx_conversion×1 | — | 459 | 61 | UTC | KZT | ROUND_HALF_UP | 0 |
-| dev/2007 | 3 | fx_conversion×1, payment_allocation×1, period_cutoff×1 | fx_partial_at_cutoff | 633 | 91 | UTC | USD | ROUND_HALF_EVEN | 0 |
-| dev/2008 | 5 | duplicate_invoice×1, fx_conversion×2, payment_allocation×1, period_cutoff×1 | allocation_with_fx | 584 | 113 | Asia/Almaty | EUR | ROUND_HALF_EVEN | 0 |
-| dev/2009 | 5 | duplicate_invoice×2, fx_conversion×1, payment_allocation×2 | — | 391 | 58 | America/Bogota | KZT | ROUND_HALF_EVEN | 0 |
-| dev/2010 | 7 | fx_conversion×2, payment_allocation×3, period_cutoff×2 | allocation_with_fx | 620 | 97 | Asia/Kolkata | EUR | ROUND_HALF_UP | 0 |
+| train/1001 | 0 | — | — | 675 | 115 | Asia/Tokyo | USD | ROUND_HALF_UP | 0 |
+| train/1002 | 7 | duplicate_invoice×2, fx_conversion×3, payment_allocation×1, period_cutoff×1 | fx_partial_at_cutoff | 441 | 90 | UTC | EUR | ROUND_HALF_EVEN | 0 |
+| train/1003 | 8 | duplicate_invoice×1, fx_conversion×2, payment_allocation×3, period_cutoff×2 | allocation_with_fx, fx_partial_at_cutoff | 467 | 72 | Asia/Almaty | USD | ROUND_HALF_UP | 0 |
+| train/1004 | 0 | — | — | 482 | 111 | America/Bogota | EUR | ROUND_HALF_EVEN | 0 |
+| train/1005 | 7 | duplicate_invoice×2, fx_conversion×3, payment_allocation×1, period_cutoff×1 | allocation_with_fx, fx_partial_at_cutoff | 695 | 117 | Asia/Kolkata | USD | ROUND_HALF_EVEN | 0 |
+| train/1006 | 5 | duplicate_invoice×1, fx_conversion×2, payment_allocation×1, period_cutoff×1 | — | 554 | 69 | UTC | KZT | ROUND_HALF_EVEN | 0 |
+| train/1007 | 2 | payment_allocation×1, period_cutoff×1 | — | 521 | 82 | Asia/Almaty | EUR | ROUND_HALF_EVEN | 0 |
+| train/1008 | 3 | duplicate_invoice×1, fx_conversion×1, payment_allocation×1 | allocation_with_fx | 348 | 66 | Asia/Almaty | USD | ROUND_HALF_EVEN | 0 |
+| train/1009 | 8 | duplicate_invoice×2, fx_conversion×3, payment_allocation×1, period_cutoff×2 | allocation_with_fx, fx_partial_at_cutoff | 510 | 116 | Asia/Almaty | EUR | ROUND_HALF_EVEN | 0 |
+| train/1010 | 7 | duplicate_invoice×2, fx_conversion×2, period_cutoff×3 | fx_partial_at_cutoff | 383 | 68 | Asia/Dubai | USD | ROUND_HALF_EVEN | 0 |
+| dev/2001 | 0 | — | — | 611 | 112 | Asia/Almaty | EUR | ROUND_HALF_UP | 0 |
+| dev/2002 | 9 | duplicate_invoice×2, fx_conversion×2, payment_allocation×2, period_cutoff×3 | fx_partial_at_cutoff | 517 | 70 | Asia/Dubai | USD | ROUND_HALF_UP | 0 |
+| dev/2003 | 7 | duplicate_invoice×1, fx_conversion×3, payment_allocation×1, period_cutoff×2 | allocation_with_fx, fx_partial_at_cutoff | 571 | 70 | Asia/Dubai | USD | ROUND_HALF_UP | 0 |
+| dev/2004 | 0 | — | — | 449 | 70 | Asia/Kolkata | USD | ROUND_HALF_EVEN | 0 |
+| dev/2005 | 6 | duplicate_invoice×2, fx_conversion×2, period_cutoff×2 | — | 395 | 68 | UTC | EUR | ROUND_HALF_UP | 0 |
+| dev/2006 | 3 | duplicate_invoice×2, fx_conversion×1 | — | 459 | 63 | UTC | KZT | ROUND_HALF_UP | 0 |
+| dev/2007 | 3 | fx_conversion×1, payment_allocation×1, period_cutoff×1 | fx_partial_at_cutoff | 647 | 95 | UTC | USD | ROUND_HALF_EVEN | 0 |
+| dev/2008 | 5 | duplicate_invoice×1, fx_conversion×2, payment_allocation×1, period_cutoff×1 | allocation_with_fx | 591 | 115 | Asia/Almaty | EUR | ROUND_HALF_EVEN | 0 |
+| dev/2009 | 5 | duplicate_invoice×2, fx_conversion×1, payment_allocation×2 | — | 410 | 70 | America/Bogota | KZT | ROUND_HALF_EVEN | 0 |
+| dev/2010 | 7 | fx_conversion×2, payment_allocation×3, period_cutoff×2 | allocation_with_fx | 610 | 95 | Asia/Kolkata | EUR | ROUND_HALF_UP | 0 |
 
 ## Сгенерированный набор (5 сидов на случай, кроме чистых по поясам)
 
@@ -87,19 +87,19 @@
 
 | вариант | раз |
 |---|---|
-| duplicate_invoice/new_number | 51 |
-| duplicate_invoice/same_number | 55 |
-| fx_conversion/invoice_wrong_date | 22 |
-| fx_conversion/invoice_wrong_rate | 17 |
-| fx_conversion/invoice_wrong_scale | 7 |
-| fx_conversion/receipt_wrong_date | 138 |
-| fx_conversion/receipt_wrong_rate | 24 |
+| duplicate_invoice/new_number | 53 |
+| duplicate_invoice/same_number | 53 |
+| fx_conversion/invoice_wrong_date | 18 |
+| fx_conversion/invoice_wrong_rate | 11 |
+| fx_conversion/invoice_wrong_scale | 9 |
+| fx_conversion/receipt_wrong_date | 139 |
+| fx_conversion/receipt_wrong_rate | 31 |
 | payment_allocation/missing | 67 |
 | payment_allocation/partial | 77 |
-| period_cutoff/early | 21 |
+| period_cutoff/early | 18 |
 | period_cutoff/late | 14 |
-| period_cutoff/receipt_early | 76 |
-| period_cutoff/tz_shift | 16 |
+| period_cutoff/receipt_early | 80 |
+| period_cutoff/tz_shift | 15 |
 
 Сценарии взаимодействия в сгенерированном наборе: allocation_with_fx — 55 эпизодов, fx_partial_at_cutoff — 55 эпизодов
 

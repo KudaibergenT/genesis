@@ -2,11 +2,11 @@
   "base_currency": "EUR",
   "company": "Orchard Foods LLP",
   "counts": {
-    "documents": 72,
+    "documents": 68,
     "fx_rates": 31,
     "invoices": 40,
-    "ledger_rows": 398,
-    "payments": 32
+    "ledger_rows": 395,
+    "payments": 28
   },
   "currency_exponents": {
     "EUR": 2,
@@ -21,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",

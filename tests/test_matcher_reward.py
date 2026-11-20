@@ -174,25 +174,45 @@ def test_finding_order_does_not_change_counts_or_reward(ep):
 
 @pytest.mark.parametrize("mutate", [
     lambda f: f.pop("explanation"),
-    lambda f: f.update(confidence=0.9),
     lambda f: f.update(claimed_amount_minor=True),
     lambda f: f.update(claimed_amount_minor=10.0),
-    lambda f: f.update(claimed_amount_minor=-5),
     lambda f: f.update(claimed_amount_minor="100"),
-    lambda f: f.update(currency="usd"),
-    lambda f: f.update(currency="USDT"),
-    lambda f: f.update(type="fraud"),
-    lambda f: f.update(affected_ids=[]),
     lambda f: f.update(affected_ids="D123"),
     lambda f: f.update(affected_ids=[1, 2]),
     lambda f: f.update(evidence_ids=["L"] * 11),
     lambda f: f.update(explanation="x" * 1001),
+    lambda f: f.update(currency=None),
+    lambda f: f.update(type=7),
 ])
 def test_schema_violations_are_malformed(ep, mutate):
+    """Jury conventions: wrong value type, missing field or exceeded limit invalidates the whole submit."""
     f = correct(ep.truth)
     mutate(f[0])
     g = grade(ep, f)
     assert g.valid is False and g.reward == -1.0 and g.errors
+
+
+@pytest.mark.parametrize("mutate", [
+    lambda f: f.update(claimed_amount_minor=-5),
+    lambda f: f.update(currency="usd"),
+    lambda f: f.update(currency="USDT"),
+    lambda f: f.update(currency=" " + f["currency"]),
+    lambda f: f.update(type="fraud"),
+    lambda f: f.update(affected_ids=[]),
+])
+def test_structurally_valid_but_wrong_fields_are_false_positives(ep, mutate):
+    """Jury conventions: a structurally valid finding with wrong type/ids/currency/amount is an FP, not a crash."""
+    f = correct(ep.truth)
+    mutate(f[0])
+    g = grade(ep, f)
+    assert g.valid is True and g.metrics["fp"] == 1 and g.metrics["fn"] == 1
+    assert g.metrics["tp"] == len(ep.truth["issues"]) - 1
+
+
+def test_unknown_extra_keys_are_ignored(ep):
+    f = correct(ep.truth)
+    f[0]["confidence"] = 0.9
+    assert grade(ep, f).metrics["tp"] == len(ep.truth["issues"])
 
 
 def test_too_many_findings_is_malformed(ep):

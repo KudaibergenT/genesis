@@ -13,13 +13,13 @@
   {
     "policy": "simple_reconciler",
     "episodes": 20,
-    "micro_precision": 0.156,
-    "micro_recall": 0.837,
-    "micro_f1": 0.262,
-    "mean_episode_f1": 0.254,
-    "return": -0.515,
-    "inspection_steps": 14.3,
-    "wall_time_s": 0.0025
+    "micro_precision": 0.159,
+    "micro_recall": 0.859,
+    "micro_f1": 0.268,
+    "mean_episode_f1": 0.257,
+    "return": -0.509,
+    "inspection_steps": 14.6,
+    "wall_time_s": 0.0026
   },
   {
     "policy": "flag_everything",
@@ -30,7 +30,7 @@
     "mean_episode_f1": 0.0,
     "return": -1.0,
     "inspection_steps": 2.0,
-    "wall_time_s": 0.0015
+    "wall_time_s": 0.0016
   },
   {
     "policy": "oracle",
@@ -41,7 +41,7 @@
     "mean_episode_f1": 1.0,
     "return": 1.0,
     "inspection_steps": 0.0,
-    "wall_time_s": 0.0011
+    "wall_time_s": 0.0012
   },
   {
     "policy": "silence",
@@ -52,7 +52,7 @@
     "mean_episode_f1": 0.2,
     "return": -0.6,
     "inspection_steps": 0.0,
-    "wall_time_s": 0.0011
+    "wall_time_s": 0.0012
   },
   {
     "policy": "reference_solver",
@@ -62,7 +62,7 @@
     "micro_f1": 1.0,
     "mean_episode_f1": 1.0,
     "return": 0.971,
-    "inspection_steps": 14.3,
-    "wall_time_s": 0.0026
+    "inspection_steps": 14.6,
+    "wall_time_s": 0.0028
   }
 ]

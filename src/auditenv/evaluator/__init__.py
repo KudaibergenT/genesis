@@ -1,7 +1,7 @@
 """Evaluator: holds the closed truth and grades a submission. Lives outside the agent."""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, FrozenSet, List, Optional
 
 from auditenv.evaluator.matcher import match
 from auditenv.evaluator.reward import metrics, official_reward
@@ -32,10 +32,22 @@ class Grade:
         }
 
 
+def open_ids(public) -> FrozenSet[str]:
+    """Every id an agent can reach through the tools (evidence ids must be among them)."""
+    from auditenv.books import fx_key
+
+    ids = {r["row_id"] for r in public.ledger}
+    ids.update(d["doc_id"] for d in public.invoices)
+    ids.update(d["doc_id"] for d in public.payments)
+    ids.update(fx_key(r) for r in public.fx)
+    return frozenset(ids)
+
+
 class Grader:
-    def __init__(self, truth: Dict[str, Any]) -> None:
+    def __init__(self, truth: Dict[str, Any], known_ids: Optional[FrozenSet[str]] = None) -> None:
         self._truth = truth
         self._episode_id = truth["episode_id"]
+        self._known_ids = known_ids
 
     def grade(self, submission: Any, inspection_steps: int, outcome: str = "submitted") -> Grade:
         """outcome: 'submitted' or 'truncated' (step/time limit: empty final answer)."""
@@ -54,7 +66,7 @@ class Grader:
                 experimental={"strict_timeout_reward": -1.0},
             )
         findings = submission["findings"]
-        result = match(findings, issues)
+        result = match(findings, issues, self._known_ids)
         m = metrics(result.tp, result.fp, result.fn, len(issues), len(findings), inspection_steps)
         strict = -1.0 if outcome == "truncated" else m["reward"]
         return Grade(
@@ -68,4 +80,4 @@ class Grader:
         )
 
 
-__all__ = ["Grade", "Grader", "match", "metrics", "official_reward", "validate_submission"]
+__all__ = ["Grade", "Grader", "match", "metrics", "official_reward", "open_ids", "validate_submission"]

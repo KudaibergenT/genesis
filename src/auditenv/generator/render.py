@@ -73,6 +73,24 @@ class IdMap:
         return self.assign(internal, "CUST-" + self.token("entity", internal, 6))
 
 
+def _number_with_gaps(ids: "IdMap", clean: List[str], injected: List[str], when: Dict[str, Any], start: int,
+                      fmt) -> None:
+    taken: Dict[int, str] = {}
+    n = start
+    for key in clean:
+        taken[n] = key
+        ids.assign(key, fmt(n))
+        n += ids.rng.weighted(((1, 6), (2, 3), (3, 1)))
+    slot_rng = Rng(ids.key.hex(), "injected-numbers")
+    for key in injected:
+        before = [num for num, k in taken.items() if when[k] <= when[key]]
+        candidate = (max(before) if before else start - 1) + 1 + slot_rng.randint(0, 1)
+        while candidate in taken:
+            candidate += 1
+        taken[candidate] = key
+        ids.assign(key, fmt(candidate))
+
+
 def render(world: World, books: Books, lines: List[LedgerLine], cfg: Dict[str, Any], world_hash: str) -> Tuple[PublicBooks, IdMap]:
     seed = world.seed
     render_cfg = cfg["render"]
@@ -100,20 +118,26 @@ def render(world: World, books: Books, lines: List[LedgerLine], cfg: Dict[str, A
         cur = first_issue.get(inv.number_key)
         if cur is None or inv.issued_at < cur:
             first_issue[inv.number_key] = inv.issued_at
+    # Business numbers: the clean history is numbered by date with natural gaps (voided numbers);
+    # documents created by error operators take a free number next to their date. Clean numbers
+    # therefore never depend on which errors were injected.
     prefix = ids.rng.choice(("INV-", "SI-", "INV/", "FV-"))
     start = ids.rng.randint(100, 899)
     cn_start = ids.rng.randint(10, 89)
     ordered = sorted(first_issue, key=lambda k: (first_issue[k], ids.token("num", k, 12)))
-    regular = [k for k in ordered if not k.startswith("num#cn")]
+    regular = [k for k in ordered if not k.startswith(("num#cn", "num#dup"))]
+    injected_numbers = [k for k in ordered if k.startswith("num#dup")]
     credit = [k for k in ordered if k.startswith("num#cn")]
-    for n, number in enumerate(regular):
-        ids.assign(number, f"{prefix}{year}-{start + n:05d}")
+    _number_with_gaps(ids, regular, injected_numbers, first_issue, start, lambda n: f"{prefix}{year}-{n:05d}")
     for n, number in enumerate(credit):
         ids.assign(number, f"CN-{year}-{cn_start + n:04d}")
     pay_prefix = ids.rng.choice(("PMT-", "RCPT-", "BR-"))
     pay_start = ids.rng.randint(1000, 8999)
-    for n, pay in enumerate(sorted(books.payments, key=lambda p: (p.received_at, ids.token("pay", p.key, 12)))):
-        ids.assign(f"pid:{pay.key}", f"{pay_prefix}{year}{pay_start + n:05d}")
+    received = {f"pid:{p.key}": p.received_at for p in books.payments}
+    pays = sorted(received, key=lambda k: (received[k], ids.token("pay", k, 12)))
+    _number_with_gaps(ids, [k for k in pays if not k.startswith("pid:pay#ix")],
+                      [k for k in pays if k.startswith("pid:pay#ix")], received, pay_start,
+                      lambda n: f"{pay_prefix}{year}{n:05d}")
 
     for cust in sorted(world.customers):
         ids.entity(cust)

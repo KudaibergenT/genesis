@@ -5,7 +5,7 @@
     "documents": 112,
     "fx_rates": 66,
     "invoices": 72,
-    "ledger_rows": 608,
+    "ledger_rows": 611,
     "payments": 40
   },
   "currency_exponents": {
@@ -22,7 +22,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",

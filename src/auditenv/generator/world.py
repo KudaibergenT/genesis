@@ -261,8 +261,16 @@ def _build_invoices(rng: Rng, world: World, cfg: Dict[str, Any], alloc: TimeAllo
     if cfg["distractors"]["boundary_documents"]:
         # Late on the last day (current period) and just after local midnight (next period):
         # these dates differ between local time and UTC, so periods must be judged locally.
-        for _ in range(rng.randint(1, 2)):
-            one_off(_time_between(rng, world.period_end, tz, 19 * 60, 23 * 60 + 40))
+        # The first one is always in a foreign currency when the company has one.
+        foreign_customers_list = [c for c in customer_keys if world.customers[c].currency != world.base_currency]
+        for i in range(rng.randint(1, 2)):
+            when = _time_between(rng, world.period_end, tz, 19 * 60, 23 * 60 + 40)
+            if i == 0 and foreign_customers_list:
+                cust = rng.choice(foreign_customers_list)
+                specs.append((cust, when, _one_off_lines(rng, world.customers[cust].currency,
+                                                         f"PO-{next(order_numbers)}")))
+            else:
+                one_off(when)
         for _ in range(rng.randint(1, 2)):
             one_off(_time_between(rng, world.period_end + timedelta(days=1), tz, 5, 4 * 60 + 30))
     for _ in range(rng.randint(2, 4)):
@@ -319,6 +327,17 @@ def _build_payments(rng: Rng, world: World, cfg: Dict[str, Any], invoices: List[
     rng.shuffle(early_foreign)
     forced_kind = {key: "unpaid" for key in early_foreign[:2]}
     forced_kind.update({key: "full_in_period" for key in early_foreign[2:4]})
+    # Every company also shows a correctly split payment and an early settled one-off sale
+    # (the source of a refund), so clean look-alikes are always present.
+    early_one_off = [inv.key for inv in sorted(invoices, key=lambda x: (x.issued_at, x.key))
+                     if inv.key not in forced_kind and world.in_period(inv.issued_at)
+                     and any(line.order_ref for line in inv.lines)
+                     and world.local_date(inv.issued_at) <= world.period_end - timedelta(days=14)]
+    rng.shuffle(early_one_off)
+    if d["split_payments"] and early_one_off:
+        forced_kind[early_one_off.pop()] = "split_in_period"
+    if d["refunds"] and early_one_off:
+        forced_kind[early_one_off.pop()] = "full_in_period"
 
     for inv in sorted(invoices, key=lambda x: (x.issued_at, x.key)):
         if not world.in_period(inv.issued_at):
@@ -329,6 +348,12 @@ def _build_payments(rng: Rng, world: World, cfg: Dict[str, Any], invoices: List[
         if kind == "full_in_period":
             day = min(issue_day + timedelta(days=rng.randint(1, 5)), world.period_end)
             raw.append((inv.customer_key, day, inv.currency, [Allocation(inv.key, total)]))
+        elif kind == "split_in_period":
+            part = _nice_part(rng, total, inv.currency) or total // 2
+            day = issue_day + timedelta(days=rng.randint(1, 4))
+            day2 = min(day + timedelta(days=rng.randint(1, 5)), world.period_end)
+            raw.append((inv.customer_key, day, inv.currency, [Allocation(inv.key, part)]))
+            raw.append((inv.customer_key, day2, inv.currency, [Allocation(inv.key, total - part)]))
         elif kind == "full":
             day = pay_day(issue_day, 1, 20)
             if day:

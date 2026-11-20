@@ -2,11 +2,11 @@
   "base_currency": "EUR",
   "company": "Lattice Textiles JSC",
   "counts": {
-    "documents": 107,
+    "documents": 116,
     "fx_rates": 33,
     "invoices": 69,
-    "ledger_rows": 493,
-    "payments": 38
+    "ledger_rows": 510,
+    "payments": 47
   },
   "currency_exponents": {
     "CNY": 2,
@@ -21,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",

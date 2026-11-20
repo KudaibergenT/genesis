@@ -2,11 +2,11 @@
   "base_currency": "KZT",
   "company": "Orchard Logistics JSC",
   "counts": {
-    "documents": 61,
+    "documents": 63,
     "fx_rates": 34,
     "invoices": 38,
     "ledger_rows": 459,
-    "payments": 23
+    "payments": 25
   },
   "currency_exponents": {
     "GBP": 2,
@@ -21,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",

@@ -2,11 +2,11 @@
   "base_currency": "KZT",
   "company": "Orchard Robotics GmbH",
   "counts": {
-    "documents": 64,
+    "documents": 69,
     "fx_rates": 64,
     "invoices": 41,
-    "ledger_rows": 535,
-    "payments": 23
+    "ledger_rows": 554,
+    "payments": 28
   },
   "currency_exponents": {
     "JPY": 0,
@@ -22,7 +22,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",

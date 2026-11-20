@@ -2,11 +2,11 @@
   "base_currency": "EUR",
   "company": "Amber Labs BV",
   "counts": {
-    "documents": 113,
+    "documents": 115,
     "fx_rates": 33,
     "invoices": 71,
-    "ledger_rows": 584,
-    "payments": 42
+    "ledger_rows": 591,
+    "payments": 44
   },
   "currency_exponents": {
     "EUR": 2,
@@ -21,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",

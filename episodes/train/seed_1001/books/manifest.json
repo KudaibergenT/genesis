@@ -2,11 +2,11 @@
   "base_currency": "USD",
   "company": "Verdant Studios BV",
   "counts": {
-    "documents": 107,
+    "documents": 115,
     "fx_rates": 32,
     "invoices": 70,
-    "ledger_rows": 650,
-    "payments": 37
+    "ledger_rows": 675,
+    "payments": 45
   },
   "currency_exponents": {
     "JPY": 0,
@@ -21,7 +21,7 @@
     "fx.csv",
     "policy.json"
   ],
-  "generator_version": "0.2.0",
+  "generator_version": "0.3.0",
   "issue_types": [
     "duplicate_invoice",
     "payment_allocation",

@@ -8,7 +8,7 @@ import re
 from typing import Any, Dict, List
 
 from auditenv import checks
-from auditenv.books import books_files, load_books
+from auditenv.books import PublicBooks, books_files, load_books
 from auditenv.generator import Episode, generate_episode
 
 STRUCTURAL = {"row_amounts", "row_currency", "entry_unbalanced", "ledger_unbalanced", "dangling_invoice_ref",
@@ -17,12 +17,33 @@ STRUCTURAL = {"row_amounts", "row_currency", "entry_unbalanced", "ledger_unbalan
 INTERNAL_KEYS = re.compile(r"(inv#|pay#|cust#|num#|bg#|E:|issue:|pid:|interaction:)")
 
 
-def load_episode(directory: str) -> Episode:
-    with open(os.path.join(directory, "truth", "truth.json"), encoding="utf-8") as fh:
-        truth = json.load(fh)
-    with open(os.path.join(directory, "truth", "provenance.json"), encoding="utf-8") as fh:
-        provenance = json.load(fh)
-    return Episode(public=load_books(os.path.join(directory, "books")), truth=truth, provenance=provenance)
+def load_episode(directory: str, with_truth: bool = True) -> Episode:
+    """Load an episode written with layout "split" (books/, truth/) or "flat" (one directory)."""
+    split = os.path.isdir(os.path.join(directory, "books"))
+    books_dir = os.path.join(directory, "books") if split else directory
+    private = os.path.join(directory, "truth") if split else directory
+    truth = provenance = None
+    if with_truth:
+        with open(os.path.join(private, "truth.json"), encoding="utf-8") as fh:
+            truth = json.load(fh)
+        path = os.path.join(private, "provenance.json")
+        if os.path.exists(path):
+            with open(path, encoding="utf-8") as fh:
+                provenance = json.load(fh)
+    return Episode(public=load_books(books_dir), truth=truth, provenance=provenance)
+
+
+def pre_injection_books(public: PublicBooks, changes: Dict[str, Any]) -> PublicBooks:
+    """Undo provenance["changes"] on the open books: the state before any error was injected."""
+    tables = {}
+    for table, key in (("ledger", "row_id"), ("invoices", "doc_id"), ("payments", "doc_id")):
+        diff = changes[table]
+        added = {r[key] for r in diff["added"]}
+        before = {m["after"][key]: m["before"] for m in diff["modified"]}
+        rows = [before.get(r[key], r) for r in getattr(public, table) if r[key] not in added]
+        tables[table] = rows + list(diff["removed"])
+    manifest = dict(public.manifest, counts=changes["manifest_counts_before"])
+    return PublicBooks(manifest=manifest, policy=public.policy, fx=public.fx, **tables)
 
 
 def clean_counterpart(ep: Episode) -> Episode:

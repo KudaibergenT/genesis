@@ -1,7 +1,7 @@
 {
   "episodes": [
     {
-      "books_sha256": "1bb3bfe613187a93f5b06921857d17d8841fa22cc5db99de11209351a307d256",
+      "books_sha256": "19b26180ce8ae5da7bd0b4d0cc927c6f8dc662f9658df0f1b96dba5519588058",
       "config_hash": "265358678fda9dfbaa7e4eb44ad82fd712f1a60c99f6ef94c29cf9c46c488e04",
       "episode_id": "ep-csuzbvopsexnyovi",
       "issues": 0,
@@ -10,25 +10,25 @@
       "truth_sha256": "713021ee6074733a1deaaa74c5c665de2d2310ce254ca2d20c0236803957c26b"
     },
     {
-      "books_sha256": "2a78a70a633adb053b9ef8d29d897b2dadbb7b96deafd278d2e1b20f94c45da1",
+      "books_sha256": "10adfa872a1bb46608bbfc205030e236cd60c857a3cdecc05091b591d1d043a5",
       "config_hash": "1b3fc7b9503e46884b07b4d57a1aafe76bd75edaffc6b8e7213ca0d0912ae4f2",
       "episode_id": "ep-37qjda65i3czcvwh",
       "issues": 7,
       "seed": 1002,
       "split": "train",
-      "truth_sha256": "6a1097f71fb4cc4a4137ebc56ba37418b062005119a428e8537db1fde3047b72"
+      "truth_sha256": "4772cbcd72b57c008d650d1e79e6cc311dfa38117deb6367b474d9e7f1713fb2"
     },
     {
-      "books_sha256": "d99b5bb9653a34b777ea56e110a1ca3267b8f7a41140812572e48550ccb95027",
+      "books_sha256": "9f8b0e7bc25a048e81612397927a3c4232b8161980f8771b5a5c64e882e793e7",
       "config_hash": "239f009c92057919660d93a447773d07c05f2746fd2988a7f3956141557e81fd",
       "episode_id": "ep-vf7q4xhsi25ahq6c",
       "issues": 8,
       "seed": 1003,
       "split": "train",
-      "truth_sha256": "c123d0d18e41881d996d8de04a9a735ae4ddfabbadfd26eec646beb25b8c5d41"
+      "truth_sha256": "51dcf4c169aa822baa21d431dd7acde59b86e2903b9da31f53d4b0c329550b62"
     },
     {
-      "books_sha256": "b2a9cdb2851ff559a8df3c6c3da419da0332fc757dfdb207569b82332bf7513f",
+      "books_sha256": "cb291a2e3dc0902794dd06733798a59bad0b5661c27df2b6fb78c8c970be3ba7",
       "config_hash": "4d139200f43f1a5219c34b1c700c2612beaf3d4fef1bcab156468d396c3be0a3",
       "episode_id": "ep-j4alisg363cf6g7h",
       "issues": 0,
@@ -37,61 +37,61 @@
       "truth_sha256": "d2ef28ab99bb6d704cf07b096b0de1f7201389786938af4a993f0a83ab55dee2"
     },
     {
-      "books_sha256": "2554ff7240faa8a0857449f2999c9ada25a1fbc0243dcc40492b934a6bbeb393",
+      "books_sha256": "d19ad76181a0098835da1c9197b26328797568b9c0aea493acb97f72fff958f1",
       "config_hash": "c0e3f229593fe31788f2cc8acaa85f0fadb595034f1698b0368aed54272ab8f6",
       "episode_id": "ep-r2kf4qe37rkm2r4j",
       "issues": 7,
       "seed": 1005,
       "split": "train",
-      "truth_sha256": "d9a3f02a7a9d49cf313936530624388d8c5bdc18daa539969da8598472d3de41"
+      "truth_sha256": "f3f494acbb5040ef6f76bee6fa21814e16fa773e76fdd5691e0be924408cc9d2"
     },
     {
-      "books_sha256": "7c8c4f1a20e1c3289b4fb9f989a7873c3770e9da08901ec6a1592da213d12efd",
+      "books_sha256": "7db0a4339e30bb4aae959fc19867b10b57f52a61611287c42440bf88db529ea1",
       "config_hash": "c0e3f229593fe31788f2cc8acaa85f0fadb595034f1698b0368aed54272ab8f6",
       "episode_id": "ep-p7hgnacaywp5sxia",
       "issues": 5,
       "seed": 1006,
       "split": "train",
-      "truth_sha256": "73e958791ebd0eb0e463fe2bd0c3481bcc3fc2409544e10762e71edc51efc646"
+      "truth_sha256": "a1fd6a7b10b4fff40654e07f4a476527e2809557360ce76e7b97044faaf12d03"
     },
     {
-      "books_sha256": "2e4dd1b766de463a520aae5116cdfa143ac6640c6b9989097ee62c4fd108ca98",
+      "books_sha256": "05ac0f328f25e1fe711ce1318887ac52a9d99428b22f888c852d6fbb84501f64",
       "config_hash": "c0e3f229593fe31788f2cc8acaa85f0fadb595034f1698b0368aed54272ab8f6",
       "episode_id": "ep-lkphidjacwfvg44b",
       "issues": 2,
       "seed": 1007,
       "split": "train",
-      "truth_sha256": "91e7bf4742a9310b7603a5b455ada85e8aa68e3c72173ca50f6eb1669d4732c8"
+      "truth_sha256": "0536de8efd7b1b1e06e2199d501d5c848ba52acbb46b46d806f65ad417a6d7c4"
     },
     {
-      "books_sha256": "21cc318743445dcfdbad0671c9d688d0ad55315d095df332c47d877cb8dadeb7",
+      "books_sha256": "adda013fae10295295c1e7e4f9e00315987b63b4d6538e9b646f8aa06f8b7557",
       "config_hash": "c0e3f229593fe31788f2cc8acaa85f0fadb595034f1698b0368aed54272ab8f6",
       "episode_id": "ep-s33rymfwej35ijyv",
       "issues": 3,
       "seed": 1008,
       "split": "train",
-      "truth_sha256": "f8a6df8a54dfe65f7064124be85adb0ec1da0b4fce93c4fc743a6bc35926a6e6"
+      "truth_sha256": "26051b93f21048c32badee84fe2c18bb3d60e7f43649eef274f8eccc39655487"
     },
     {
-      "books_sha256": "1e242aed4deb754f66e12a5a89a6fbecef768331a4bdbfbcf303e05e3fe52cc0",
+      "books_sha256": "5768f2e72680ad64c127d3923c5c1df6b9448b70604fcadd63ce2be5527633ba",
       "config_hash": "c0e3f229593fe31788f2cc8acaa85f0fadb595034f1698b0368aed54272ab8f6",
       "episode_id": "ep-qe2htt5mtfxvus53",
       "issues": 8,
       "seed": 1009,
       "split": "train",
-      "truth_sha256": "cd222bb25f5ef6e7c24ea621cf5268dc92841916a6ac3d6366dea5ef70ac7164"
+      "truth_sha256": "59154b5428398dcb0fc7a7399e19a9e69eced329860bbe77c1ae3934523f90da"
     },
     {
-      "books_sha256": "1fc2b9f464b9e713ea6562a07d859b12acb653bbff05c8dae3ceb8df33aa6159",
+      "books_sha256": "cef08aba68b7c011da3010090d54391041ca75c2ea4f0d8c7b09762c049db5e1",
       "config_hash": "c0e3f229593fe31788f2cc8acaa85f0fadb595034f1698b0368aed54272ab8f6",
       "episode_id": "ep-ks3fwuiuuxif3bx4",
       "issues": 7,
       "seed": 1010,
       "split": "train",
-      "truth_sha256": "b6944fc0707c19e25927066a51127d9e9876cd6e991b168ab815fe54ee3bd063"
+      "truth_sha256": "e1a79301b1a624448201602e0920fcdb4234635c69521d3f9c4d7524d79b04d1"
     },
     {
-      "books_sha256": "9dde030e159dae68831d5fa8c74da033bb0dd049a783216d73557e37b49c0db2",
+      "books_sha256": "bd54fef82549d268aa9c24d9eab3cf8a2e02be538c735fb092fb050468fb71a5",
       "config_hash": "265358678fda9dfbaa7e4eb44ad82fd712f1a60c99f6ef94c29cf9c46c488e04",
       "episode_id": "ep-p6rkp3app4ltg7o4",
       "issues": 0,
@@ -100,25 +100,25 @@
       "truth_sha256": "d6dcf0e9371fe77a7f116f0e955a264c9429e85ce7751f0484ce652d6283db43"
     },
     {
-      "books_sha256": "794b2157116aba300e76ce900799e72e36ea2b37b551a96ac0b1d2b4230dc60b",
+      "books_sha256": "b255db4e8c474789574b2063ca28abca0094b8eb46d3bfe8673c2c208460d6a1",
       "config_hash": "83c3c38a898fb01b80a44eb9f2786f17de95afce207bcdde687c3101866849c1",
       "episode_id": "ep-r6jmkb4gcdmgejjg",
       "issues": 9,
       "seed": 2002,
       "split": "dev",
-      "truth_sha256": "ca5bfe9cd5c145c8eb2873abd8fdc71c6ade5720a13cc705455890b2c0a11139"
+      "truth_sha256": "d21e7526e91c1c0a4291335ea12c19a7f3a0447391d963f50ddf720296a5b1ae"
     },
     {
-      "books_sha256": "5645994607803fc5c9ec5668f36f295ca079a498b09587b849b88f4da0d7d622",
+      "books_sha256": "1e7c277e029c8894bb9b4fe67306e883373d306b2ccd6a6c2ce3c11e7bd81afe",
       "config_hash": "1d3ecc55f72980da4223395867b9fa05a2de7b3ef4f7bf37ce5a87e2f87dde5e",
       "episode_id": "ep-ybuxer54olisuwet",
       "issues": 7,
       "seed": 2003,
       "split": "dev",
-      "truth_sha256": "183d0784a4fddd19d09bb0ab5ac4c624fc20bf0da6dc5d3e26a2687f8c146207"
+      "truth_sha256": "e93c250ef73f12e8d58b63cd346f28bd9a625d1869c66d3a5ffa5ffde18d97b8"
     },
     {
-      "books_sha256": "86e4005bd9641b9eefb2553731961f9e2477f71bee16d41f5163f5e5def283b5",
+      "books_sha256": "87024d3e9302ed87ca44e8f3fe6cdd9ea9e8383df3c29acaa2c9f15cdc35a3a1",
       "config_hash": "ecd0f1a23607b01187adb13b40ddf2a02c841637e9cb43b405ed5f5999f08bcc",
       "episode_id": "ep-no7e3hv6tecihnoy",
       "issues": 0,
@@ -127,59 +127,59 @@
       "truth_sha256": "741d43d5be26f59d8c592a98da694d8f25695932a3057925c71e4655cc53f809"
     },
     {
-      "books_sha256": "63937c03655f2fc8316b8d143812b4a8f2bcc4b00715bc85599747dddf0712ba",
+      "books_sha256": "2c62b9446445a558b24944d24b5c8fd00e41b94900f14b9a998f500fd0df062e",
       "config_hash": "9e349fa256212ec011aee4a92a509fa6b00d32873c096e828e6dfd063c2f41ec",
       "episode_id": "ep-fv7pf42wxpekbzpv",
       "issues": 6,
       "seed": 2005,
       "split": "dev",
-      "truth_sha256": "e473cc821414f41045566184f63a02dc32eac936621ec3057474da0681af0278"
+      "truth_sha256": "21b680cb22317697fa0a25ab09292504c70ca0201589a942a67458aea83651e4"
     },
     {
-      "books_sha256": "5b395c555b1708a9a3ea26d6dcb324603b9060fd934b3f1461a06fe0a3a3d92b",
+      "books_sha256": "b772e799d313b34a563e977bcf0a1c037a3aaccf4b6cc9d7f07f4265d45e336e",
       "config_hash": "c0e3f229593fe31788f2cc8acaa85f0fadb595034f1698b0368aed54272ab8f6",
       "episode_id": "ep-vbzgkyhmy3gi3vyu",
       "issues": 3,
       "seed": 2006,
       "split": "dev",
-      "truth_sha256": "20e1361cd3a01abea57d26e92ce7113f034cd7586a28e3946709d3b4343689b7"
+      "truth_sha256": "2596fbef77b6fb2c359e6f1e7be54c0efdc366f2e3f55a2852d28128383991c0"
     },
     {
-      "books_sha256": "8a6fe3c8f5670b4c1b41c0384e321d40d95d3a13fc825fde8ea85fd0ff523ca9",
+      "books_sha256": "ca18f4f5e976b6057741b63b7239137864fddbad1789d73a977a0db2111a10e7",
       "config_hash": "c0e3f229593fe31788f2cc8acaa85f0fadb595034f1698b0368aed54272ab8f6",
       "episode_id": "ep-2pazrqddrrovhamf",
       "issues": 3,
       "seed": 2007,
       "split": "dev",
-      "truth_sha256": "b37e5515a434e1e657da0cb7c0fadd89ae73dd2fbaa2b49028c740743502e3e9"
+      "truth_sha256": "4ba49bd7a3ac8438ff0f74b43f9b61659cc236bd46ab42d209310d448b537a24"
     },
     {
-      "books_sha256": "fccb1929a6241a7a2b21c7df04515a7bd4b54cee4360f9bdc226df7e6e92211c",
+      "books_sha256": "cfd538f176641808852bc3595d692ef7835f19b588f3aad1d84b655a82501afd",
       "config_hash": "c0e3f229593fe31788f2cc8acaa85f0fadb595034f1698b0368aed54272ab8f6",
       "episode_id": "ep-e336r6p4vla57jm6",
       "issues": 5,
       "seed": 2008,
       "split": "dev",
-      "truth_sha256": "b276f541493fe9d53af436c495bc924b6d572197336abeccba6003867ee6425d"
+      "truth_sha256": "c12f730a1734997a9860dbab4b614b2c52eb036fe7b6b86723f0e4d82812ae15"
     },
     {
-      "books_sha256": "5446fd77cced723f83aaa4c9619788115cfd38ea0964d21488405a0f96e8af7a",
+      "books_sha256": "08c769c80d94f26ae6188ae5c39cb3567d7c8967b49c63afc99d55eb53eeb36a",
       "config_hash": "c0e3f229593fe31788f2cc8acaa85f0fadb595034f1698b0368aed54272ab8f6",
       "episode_id": "ep-mkrlauxphzhvbq5i",
       "issues": 5,
       "seed": 2009,
       "split": "dev",
-      "truth_sha256": "622096ae25272758906e45b17fa5388a48161c33b7564c0c26f7abd27bec3579"
+      "truth_sha256": "f2d4883e451f4e62e49d04195d488c46677f8154692bd6dd64adff7f81622e1a"
     },
     {
-      "books_sha256": "c6c9b1f0797b2ba02898e804049552ee5c009bf076bc5853e3cb91c46143a3b1",
+      "books_sha256": "a365c16be413ea660e6ac496b0e0641aadad0cd87ad92e9a61b4513e293f5cc8",
       "config_hash": "c0e3f229593fe31788f2cc8acaa85f0fadb595034f1698b0368aed54272ab8f6",
       "episode_id": "ep-gyldrb74oi7tdtmd",
       "issues": 7,
       "seed": 2010,
       "split": "dev",
-      "truth_sha256": "78dc299ae5e9d57e6e81f08fd756590b0fd78a6e9b2664660e32c26bd6fcccd2"
+      "truth_sha256": "66c8fd9a9c3f3f4eb477601f6ced1d14ed8647001f0269f6b144cb9db8a6dbb6"
     }
   ],
-  "generator_version": "0.2.0"
+  "generator_version": "0.3.0"
 }

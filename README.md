@@ -22,6 +22,88 @@ python3.11 scripts/run_all.py   # то же без Docker (нужны pytest/hyp
 тесты; пишет `run_all.json` и `run_all.csv`. Код выхода 0 — только если все проверки пройдены.
 Флаги: `--quick` (без stage2_eval, таймаут 5 с), `--skip-tests`, `--require-offline`, `--require-limits`.
 
+## Подключение жюри (`judge_adapter.py`)
+
+Рабочая директория — корень проекта (`/app` в контейнере). Точки входа:
+
+```bash
+docker build -t genesis-auditenv .
+docker run --rm --network none --cpus 2 --memory 4g --entrypoint python -v "$PWD/jury:/jury" \
+  genesis-auditenv -c "import judge_adapter as ja; ..."
+```
+
+```python
+import judge_adapter as ja
+ja.generate_episode(seed, config, output_dir)   # config — конфигурация генератора команды (см. ниже)
+env = ja.make_env()
+obs, info = env.reset(seed, {"mode": "closed", "episode_dir": output_dir, "team_config": {}})
+obs, reward, terminated, truncated, info = env.step({"name": "list_records",
+                                                     "args": {"table": "ledger", "cursor": None, "limit": 50}})
+ja.score_episode(output_dir, findings_json, inspection_steps)
+```
+
+- `generate_episode` пишет в `output_dir` восемь файлов: `manifest.json`, `ledger.csv`, `invoices.jsonl`,
+  `payments.jsonl`, `fx.csv`, `policy.json` и закрытые `truth.json`, `provenance.json`.
+- `reset` в режиме `closed` с `episode_dir` загружает только открытые файлы (эталон в среду не
+  загружается вообще); `train` с `episode_dir` дополнительно читает truth для терминальной награды;
+  без `episode_dir` эпизод генерируется из `seed` и `team_config`. Повторный reset начинает тот же эпизод.
+- Действия: `{"name": ..., "args": {...}}`; у submit `{"findings": <findings.json>}`. Наблюдения:
+  первое `{"task","manifest","policy","remaining_steps"}`, далее `{"result","error","remaining_steps"}`.
+  Результаты: `list_records` → `{"records", "next_cursor"}`; `get_record` / `get_document` → сама
+  запись / документ; `calculator` → десятичная строка (`"0.3"`); `submit` → `{"accepted": true}` либо
+  ошибка `invalid_submission` (только структура, без оценки правильности).
+- Таблицы: `ledger` (id `row_id`), `invoices` и `payments` (id `doc_id`), `fx` (id
+  `date|source_currency|target_currency`, например `2026-03-14|EUR|KZT`). В CSV отсутствующая ссылка —
+  пустое поле, в JSON и наблюдениях — `null`.
+- Лимит 60 с от reset: шаг после истечения возвращает `truncated=true`, пустые findings.
+  Submit — одно из 100 действий, в `inspection_steps` не входит.
+- Закрытый режим: `reward` всегда числовой 0; после эпизода `env.submitted_findings()` и
+  `env.inspection_steps()` доступны только процессу жюри.
+- `score_episode` → `{"tp","fp","fn","precision","recall","f1","return"}`; невалидный submit →
+  `return = -1`, остальные `null`, ошибка в журнале (`logging` `auditenv.judge`, `ja.score_errors()`).
+
+**Схема truth.json:** `{"schema_version","episode_id","issues":[{"issue_id","type","affected_ids",
+"expected_amount_minor","currency","tolerance_minor","evidence_sets"}]}`; `evidence_sets` — список
+допустимых наборов (вывод должен включать хотя бы один целиком). **provenance.json:** seed, полный
+config и его хэш, версия генератора, `mutations` (оператор, вариант, `params` и `params_surface` в
+видимых ID, связь ошибок сценария), `changes` — все добавленные/удалённые/изменённые записи журнала и
+документы с полными значениями до и после (обратное применение даёт книги до инъекции:
+`auditenv.audit.pre_injection_books`), `id_map` (внутренний ключ → видимый ID).
+
+**Matcher** (`src/auditenv/evaluator/matcher.py`, `schema.py`) следует опубликованным соглашениям:
+ID сравниваются точно; `affected_ids` и `evidence_ids` — множества (лимит 10 проверяется до
+удаления повторов); все evidence_ids должны существовать в открытых данных; валюта и тип — точное
+сравнение строк; неизвестный тип, любая строка валюты, отрицательная сумма — FP, а не авария;
+неверный тип значения, отсутствующее поле, > 30 выводов, > 10 доказательств, explanation > 1000
+символов — невалидный submit (−1); максимальное паросочетание с детерминированным выбором по
+(issue_id, индекс вывода); `explanation` не читается.
+
+**Четыре типа ошибок и допуски:**
+
+| тип | affected_ids | сумма и валюта | τ | допустимые доказательства |
+|---|---|---|---|---|
+| `duplicate_invoice` | doc_id обеих копий счёта | total_minor, валюта счёта | 0 | оба doc_id + по одной проводке (AR или выручка) каждой копии |
+| `payment_allocation` | doc_id платежа | сумма в 2400 по платежу, валюта учёта | 0 | doc_id платежа + его строка 2400 |
+| `fx_conversion` | doc_id документа | \|проведено − convert(сумма, курс policy)\|, валюта учёта | 1 | doc_id + строка проводки + курс policy (`date\|src\|tgt`) |
+| `period_cutoff` | doc_id документа | сумма ошибочно датированной проводки, валюта учёта | 0 | doc_id + эта строка |
+
+**Матрица D01–D20** — конфигурации в `configs/scenarios/` (передаются как `config` в
+`generate_episode`):
+
+| эпизоды | конфигурация | что гарантирует генератор |
+|---|---|---|
+| D01–D05 | `clean.json` (`{"max_issues": 0}`) | truth пуст; в каждой компании есть разбитый платёж, возврат (кредит-нота + отрицательный платёж), законные повторяющиеся суммы (еженедельные подписки), валютный документ поздно вечером последнего дня, документы следующего периода в окне cut-off |
+| D06–D08 | `duplicate_invoice.json` | одна ошибка-дубль |
+| D09–D11 | `payment_allocation_missing.json`, `payment_allocation_partial.json` | пропуск / частичное распределение |
+| D12–D13 | `fx_conversion.json` | курс другой даты, искажённый курс или ошибка разрядности |
+| D14–D15 | `period_cutoff.json` | счёт/поступление в чужом периоде, включая ошибку часового пояса |
+| D16–D18 | `interaction_fx_partial_at_cutoff.json` | частичный валютный платёж после полуночи последнего дня: cut-off + FX |
+| D19–D20 | `interaction_allocation_with_fx.json` | неполное распределение валютного платежа + неверный курс |
+
+Самопроверка по опубликованным определениям: `tests/test_judge_checks.py` (C01–C20, тесты 1–20
+блока 3, M01–M12, матрица D01–D20, парные проверки P01–P20 с перестановкой и согласованной сменой
+ID во всех файлах и эталоне).
+
 ## Изоляция агента
 
 Агент запускается `auditenv.sandbox.runner.run_isolated(policy, seed, ...)` отдельным процессом

@@ -13,7 +13,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from auditenv import canon
 from auditenv.books import PRIMARY_KEYS, TABLES, fx_key
 from auditenv.env.calculator import CalculatorError, evaluate
-from auditenv.evaluator import Grade, Grader
+from auditenv.evaluator import Grade, Grader, open_ids, validate_submission
 from auditenv.evaluator.schema import MAX_EVIDENCE_IDS, MAX_EXPLANATION_CHARS, MAX_FINDINGS
 from auditenv.generator import Episode, generate_episode
 from auditenv.rng import derive_key
@@ -51,6 +51,14 @@ ARG_KEYS = {
     "get_document": ({"doc_id"}, set()),
     "calculator": ({"expression"}, set()),
 }
+
+
+def _jsonable(obj: Any) -> bool:
+    try:
+        canon.json_copy(obj)
+        return True
+    except (TypeError, ValueError, RecursionError):
+        return False
 
 
 class ActionError(Exception):
@@ -139,6 +147,16 @@ class AuditEnv:
         """Evaluator-side grade of the finished episode. Never exposed to the policy."""
         return None if self._grade is None else self._grade.as_dict()
 
+    def final_submission(self) -> Optional[Dict[str, Any]]:
+        """The accepted findings.json (None if nothing valid was submitted). Evaluator side."""
+        if self._grade is None or self._grade.outcome != "submitted":
+            return None
+        return self._final_submission
+
+    @property
+    def inspection_steps(self) -> Optional[int]:
+        return None if self._grade is None else self._inspection_steps
+
     @property
     def episode_id(self) -> str:
         return self._episode_id
@@ -150,7 +168,7 @@ class AuditEnv:
     # ------------------------------------------------------------------ internals
     def _load(self, episode: Episode, mode: str) -> None:
         public = episode.public
-        self._grader = Grader(episode.truth)
+        self._grader = Grader(episode.truth, open_ids(public)) if episode.truth is not None else None
         self._episode_id = public.manifest["episode_id"]
         self._manifest = canon.json_copy(public.manifest)
         self._policy = canon.json_copy(public.policy)
@@ -171,6 +189,8 @@ class AuditEnv:
         self._terminated = False
         self._truncated = False
         self._grade: Optional[Grade] = None
+        self._final_submission: Optional[Dict[str, Any]] = None
+        self._inspection_steps: Optional[int] = None
         self._ready = True
 
     def _parse(self, action: Any) -> Tuple[str, Dict[str, Any]]:
@@ -272,6 +292,17 @@ class AuditEnv:
         return canon.json_copy(obs), self._visible_reward(grade), True, False, {"step": self._steps, "final": True}
 
     def _finish(self, submission: Any, outcome: str, inspection_steps: int) -> Grade:
+        self._final_submission = canon.json_copy(submission) if outcome == "submitted" and _jsonable(submission) else None
+        self._inspection_steps = inspection_steps
+        if self._grader is None:  # closed episode loaded without truth: grading happens in the evaluator
+            valid, errors = (True, []) if outcome == "truncated" else validate_submission(submission, self._episode_id)
+            grade = Grade(reward=0.0, valid=valid, outcome=outcome if valid else "malformed",
+                          inspection_steps=inspection_steps, metrics={}, errors=errors)
+            self._grade = grade
+            self._done = True
+            self._terminated = outcome == "submitted"
+            self._truncated = outcome == "truncated"
+            return grade
         try:
             grade = self._grader.grade(submission, inspection_steps=inspection_steps, outcome=outcome)
         except Exception as exc:  # an evaluator fault must never reach the agent

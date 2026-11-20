@@ -1,0 +1,2 @@
+{"errors": {"duplicate_invoice": {"count": 0}, "payment_allocation": {"count": 1, "variants": ["missing"]}, "fx_conversion": {"count": 0}, "period_cutoff": {"count": 0}},
+ "interactions": {"fx_partial_at_cutoff": {"count": 0}, "allocation_with_fx": {"count": 0}}}

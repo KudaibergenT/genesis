@@ -168,13 +168,13 @@ def test_time_limit_kills_the_agent_and_cleans_up(name):
 
 def test_evaluator_faults_are_not_revealed_to_the_agent():
     e = episode(5, CLEAN_CONFIG)
-    broken = Episode(public=e.public, truth={"episode_id": e.episode_id, "issues": [{"issue_id": "ISS-BROKEN"}]},
+    broken = Episode(public=e.public, truth={"episode_id": e.episode_id, "issues": None, "note": "ISS-BROKEN"},
                      provenance=e.provenance)
     run = run_isolated("reference_solver", 5, episode=broken, mode="train")
-    assert run.result["outcome"] == "evaluator_error" and "KeyError" in run.result["errors"][0]
+    assert run.result["outcome"] == "evaluator_error" and "TypeError" in run.result["errors"][0]
     last = json.loads(run.sent_messages[-1])
     assert last["reward"] == 0.0 and last["observation"]["error"] is None
-    assert "ISS-BROKEN" not in "".join(run.sent_messages) and "KeyError" not in "".join(run.sent_messages)
+    assert "ISS-BROKEN" not in "".join(run.sent_messages) and "TypeError" not in "".join(run.sent_messages)
 
 
 def test_no_agent_directories_or_truth_files_are_left_in_temp(ep):

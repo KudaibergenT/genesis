@@ -22,7 +22,13 @@ def test_schema_set_is_complete_and_linked_at_the_root():
     assert set(SCHEMAS) >= {"manifest", "policy", "ledger_row", "invoice", "payment", "fx_row", "truth", "truth_input",
                             "provenance", "findings", "adapter_action", "adapter_first_observation",
                             "adapter_observation", "score_result"}
-    assert os.path.realpath(os.path.join(ROOT, "schemas")) == os.path.realpath(SCHEMA_DIR)
+    root_dir = os.path.join(ROOT, "schemas")  # a symlink in git; a real copy inside the Docker image
+    assert os.path.isdir(root_dir)
+    names = sorted(n for n in os.listdir(SCHEMA_DIR) if n.endswith(".schema.json"))
+    assert sorted(n for n in os.listdir(root_dir) if n.endswith(".schema.json")) == names
+    for n in names:
+        with open(os.path.join(root_dir, n), "rb") as a, open(os.path.join(SCHEMA_DIR, n), "rb") as b:
+            assert a.read() == b.read(), n
 
 
 @pytest.mark.parametrize("name", SCHEMAS)

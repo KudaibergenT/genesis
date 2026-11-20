@@ -21,6 +21,7 @@ RUN pip install --no-deps --require-hashes -r requirements-dev.lock
 
 COPY pyproject.toml README.md LICENSE judge_adapter.py ./
 COPY src ./src
+COPY schemas ./schemas
 COPY configs ./configs
 COPY episodes ./episodes
 COPY scripts ./scripts

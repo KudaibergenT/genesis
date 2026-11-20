@@ -246,6 +246,8 @@ def render(world: World, books: Books, lines: List[LedgerLine], cfg: Dict[str, A
         "money_format": "integer minor units; exponent per currency_exponents",
         "null_representation": "missing references are explicit null: JSON null in JSON/JSONL, the unquoted "
                                "token null in CSV; an empty CSV field is invalid",
+        "synthetic_data": "every company, counterparty, document, account, amount and rate is generated; the "
+                          "company name is an invented word pair marked (synthetic); no real financial or personal data",
         "time_format": "ISO-8601 with UTC offset; offsets differ between sources, convert to the company timezone",
         "issue_types": list(ISSUE_TYPES),
         "files": ["manifest.json", "ledger.csv", "invoices.jsonl", "payments.jsonl", "fx.csv", "policy.json"],

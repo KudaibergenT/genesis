@@ -39,11 +39,21 @@ APPROX_PER_USD = {
     "USD": "1",
 }
 
-NAME_A = ("Blue Ridge", "Granite", "Juniper", "Meridian", "Lattice", "Kestrel", "Saffron", "Tundra",
-          "Verdant", "Quartz", "Harbor", "Cobalt", "Amber", "Silverline", "Orchard", "Basalt")
-NAME_B = ("Analytics", "Logistics", "Foods", "Systems", "Textiles", "Robotics", "Media", "Agro",
-          "Labs", "Energy", "Retail", "Build", "Optics", "Freight", "Clinics", "Studios")
-NAME_SUFFIX = ("LLP", "Ltd", "GmbH", "LLC", "JSC", "BV")
+# Company names are invented words built from syllables and always end with the explicit
+# marker "(synthetic)"; no legal-entity suffix is used, so a name cannot pose as a registered firm.
+_ONSETS = ("b", "br", "d", "dr", "f", "g", "k", "kr", "l", "m", "n", "p", "qu", "r", "s", "st", "t", "tr", "v", "z")
+_VOWELS = ("a", "e", "i", "o", "u", "ae", "io", "ou")
+_CODAS = ("", "", "n", "r", "s", "x", "l", "m", "nd")
+SYNTHETIC_MARKER = "(synthetic)"
+
+
+def _invented_word(rng: Rng) -> str:
+    syllables = rng.randint(2, 3)
+    return "".join(rng.choice(_ONSETS) + rng.choice(_VOWELS) for _ in range(syllables)).capitalize() + rng.choice(_CODAS)
+
+
+def synthetic_name(rng: Rng) -> str:
+    return f"{_invented_word(rng)} {_invented_word(rng)} {SYNTHETIC_MARKER}"
 
 ONE_OFF_ITEMS = (
     "Consulting services", "Implementation milestone", "Data migration", "Training workshop",
@@ -129,7 +139,7 @@ def build_world(seed: int, cfg: Dict[str, Any], world_hash: str) -> Tuple[World,
     foreign = tuple(sorted(rng.sample(pool, n_foreign)))
 
     names_rng = rng.child("names")
-    company_name = f"{names_rng.choice(NAME_A)} {names_rng.choice(NAME_B)} {names_rng.choice(NAME_SUFFIX)}"
+    company_name = synthetic_name(names_rng)
     n_customers = resolve_range(cfg["size"]["customers"], rng)
     used_names = {company_name}
     currencies: List[str] = []
@@ -146,7 +156,7 @@ def build_world(seed: int, cfg: Dict[str, Any], world_hash: str) -> Tuple[World,
     customers: Dict[str, Customer] = {}
     for i, currency in enumerate(currencies):
         while True:
-            name = f"{names_rng.choice(NAME_A)} {names_rng.choice(NAME_B)} {names_rng.choice(NAME_SUFFIX)}"
+            name = synthetic_name(names_rng)
             if name not in used_names:
                 used_names.add(name)
                 break

@@ -14,6 +14,9 @@ if [ -n "${PLATFORM:-}" ]; then
   OUT="$OUT-$(echo "$PLATFORM" | tr '/' '-')"
 fi
 mkdir -p "$OUT"
+# The evaluator runs as root with all capabilities dropped (no CAP_DAC_OVERRIDE), so on Linux hosts it
+# cannot write into a directory owned by the invoking user unless the directory itself allows it.
+chmod 0777 "$OUT"
 
 # shellcheck disable=SC2086
 docker build $PLATFORM_ARGS -t "$IMAGE" .

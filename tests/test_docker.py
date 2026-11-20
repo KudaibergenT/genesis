@@ -100,6 +100,28 @@ def test_isolated_agent_runs_unprivileged_inside_the_container(image):
     assert set(info["reward_seen"]) == {0.0}
 
 
+@pytest.mark.parametrize("mode, writable", [("0755", False), ("0777", True)])
+def test_report_directory_owned_by_another_user(image, mode, writable):
+    """On Linux CI the bind-mounted report directory belongs to the runner user (uid 1001); the
+    evaluator is root without CAP_DAC_OVERRIDE, so docker_run_all.sh makes the directory 0777."""
+    volume = f"auditenv-perm-{mode}"
+    subprocess.run(["docker", "volume", "rm", "-f", volume], capture_output=True)
+    subprocess.run(["docker", "volume", "create", volume], capture_output=True, check=True)
+    try:
+        subprocess.run(["docker", "run", "--rm", "--entrypoint", "sh", "-v", f"{volume}:/out", image, "-c",
+                        f"chown 1001:1001 /out && chmod {mode} /out"], capture_output=True, check=True)
+        out = subprocess.run(["docker", "run", "--rm", *LIMITS, "-v", f"{volume}:/out", "--entrypoint", "python", image,
+                              "-c", "open('/out/report.json', 'w').write('{}'); print('WROTE')"],
+                             capture_output=True, text=True)
+        assert ("WROTE" in out.stdout) is writable, out.stderr[-500:]
+        if not writable:
+            assert "Permission denied" in out.stderr
+    finally:
+        subprocess.run(["docker", "volume", "rm", "-f", volume], capture_output=True)
+    with open(os.path.join(ROOT, "scripts", "docker_run_all.sh"), encoding="utf-8") as fh:
+        assert 'chmod 0777 "$OUT"' in fh.read()
+
+
 def test_quick_offline_evaluation_passes_inside_the_container(image):
     cmd = ["docker", "run", "--rm", *LIMITS, image, "--out", "/tmp/report", "--quick", "--skip-tests",
            "--require-offline", "--require-limits"]

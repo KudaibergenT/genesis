@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "provenance.json",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "episode_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generator_version": {
+      "type": "string"
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "config": {
+      "type": "object"
+    },
+    "config_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "world_config_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "world": {
+      "type": "object"
+    },
+    "issue_budget": {
+      "type": "object",
+      "properties": {
+        "max_issues": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "per_operator": {
+          "type": "object"
+        },
+        "injected": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "max_issues",
+        "per_operator",
+        "injected"
+      ],
+      "additionalProperties": false
+    },
+    "mutations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "operator",
+          "variant",
+          "issue_key",
+          "issue_id",
+          "scenario",
+          "linked_issue_id",
+          "affected",
+          "affected_ids",
+          "params",
+          "params_surface"
+        ],
+        "properties": {
+          "operator": {
+            "enum": [
+              "duplicate_invoice",
+              "payment_allocation",
+              "fx_conversion",
+              "period_cutoff"
+            ]
+          },
+          "issue_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "affected_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "changes": {
+      "type": "object",
+      "properties": {
+        "ledger": {
+          "type": "object",
+          "properties": {
+            "added": {
+              "type": "array"
+            },
+            "removed": {
+              "type": "array"
+            },
+            "modified": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "before": {
+                    "type": "object"
+                  },
+                  "after": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "before",
+                  "after"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "added",
+            "removed",
+            "modified"
+          ],
+          "additionalProperties": false
+        },
+        "invoices": {
+          "type": "object",
+          "properties": {
+            "added": {
+              "type": "array"
+            },
+            "removed": {
+              "type": "array"
+            },
+            "modified": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "before": {
+                    "type": "object"
+                  },
+                  "after": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "before",
+                  "after"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "added",
+            "removed",
+            "modified"
+          ],
+          "additionalProperties": false
+        },
+        "payments": {
+          "type": "object",
+          "properties": {
+            "added": {
+              "type": "array"
+            },
+            "removed": {
+              "type": "array"
+            },
+            "modified": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "before": {
+                    "type": "object"
+                  },
+                  "after": {
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "before",
+                  "after"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "added",
+            "removed",
+            "modified"
+          ],
+          "additionalProperties": false
+        },
+        "fx": {
+          "const": "unchanged"
+        },
+        "manifest_counts_before": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "ledger",
+        "invoices",
+        "payments",
+        "fx",
+        "manifest_counts_before"
+      ],
+      "additionalProperties": false
+    },
+    "id_map": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "episode_id",
+    "generator_version",
+    "seed",
+    "config",
+    "config_hash",
+    "world_config_hash",
+    "world",
+    "issue_budget",
+    "mutations",
+    "changes",
+    "id_map"
+  ],
+  "additionalProperties": false
+}

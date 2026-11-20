@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "judge_adapter step action",
+  "type": "object",
+  "properties": {
+    "name": {
+      "enum": [
+        "list_records",
+        "get_record",
+        "get_document",
+        "calculator",
+        "submit"
+      ]
+    },
+    "args": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "name",
+    "args"
+  ],
+  "additionalProperties": false
+}

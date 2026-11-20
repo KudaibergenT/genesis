@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "task": {
+      "type": "string"
+    },
+    "manifest": {
+      "type": "object"
+    },
+    "policy": {
+      "type": "object"
+    },
+    "remaining_steps": {
+      "const": 100
+    }
+  },
+  "required": [
+    "task",
+    "manifest",
+    "policy",
+    "remaining_steps"
+  ],
+  "additionalProperties": false
+}

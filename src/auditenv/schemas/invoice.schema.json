@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "invoices.jsonl line",
+  "type": "object",
+  "properties": {
+    "doc_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "invoice_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entity_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "issued_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?([+-]\\d{2}:\\d{2}|Z)$"
+    },
+    "due_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?([+-]\\d{2}:\\d{2}|Z)$"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "total_minor": {
+      "type": "integer"
+    },
+    "line_items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "line_no": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "service_period": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "order_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "unit_price_minor": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "amount_minor": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "line_no",
+          "description",
+          "service_period",
+          "order_ref",
+          "quantity",
+          "unit_price_minor",
+          "amount_minor"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "doc_id",
+    "invoice_id",
+    "entity_id",
+    "issued_at",
+    "due_at",
+    "currency",
+    "total_minor",
+    "line_items"
+  ],
+  "additionalProperties": false
+}

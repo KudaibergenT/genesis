@@ -93,7 +93,33 @@ uid 1001 с правами 0755 → `PermissionError: [Errno 13] Permission deni
 0 провалов; регрессионный тест `tests/test_docker.py::test_report_directory_owned_by_another_user`;
 повторный прогон CI — в `jury_audit_report.md`.
 
-## 9. Неустранимый предел: «пометить всё» при k ≥ 10
+## 9. Оценщик падал на truth.json только с полями §03
+
+Измерено (аудит 2026-11-20, `scratchpad/audit_probe.py`): фикстура, в truth которой ровно поля §03
+(`issue_id`, `type`, `affected_ids`, `expected_amount_minor`, `currency`, наборы доказательств), без нашего
+`tolerance_minor` → `score_episode` бросал `KeyError: 'tolerance_minor'` вместо метрик. Это затронуло бы
+все 20 тестов блока 3, если жюри соберёт фикстуры по схеме кейса. Причина: matcher читал
+`issue["tolerance_minor"]` напрямую, а генератор всегда писал это поле, поэтому тесты на наших
+эпизодах сбоя не видели. Исправление: `src/auditenv/truth.py` проверяет truth по
+`schemas/truth_input.schema.json`, отсутствующий τ = 0 (умолчание жюри), отсутствующий `episode_id`
+берётся из manifest, разрешён голый список ошибок, некорректный truth → `TruthFormatError` с
+перечнем нарушений. Повторная проверка: `tests/test_truth_contract.py` — фикстура только с полями
+§03 для `duplicate_invoice` и `fx_conversion` даёт точные значения тестов 1, 2, 5–11, 15–17 блока 3;
+явный τ = 1 даёт TP для 10001 и FP для 10002 (M08); проверка `judge/truth_contract_section03_fixtures`
+в `run_all` на обеих архитектурах.
+
+## 10. В образе не было каталога схем
+
+Измерено: после добавления `schemas/` хостовый pytest прошёл, а `tests/test_docker.py::
+test_quick_offline_evaluation_passes_inside_the_container` упал: в контейнере
+`[FAIL] judge/json_schema_conformance`, `'/app/schemas' == '/app/src/auditenv/schemas'`. Причина:
+Dockerfile копирует каталоги поимённо, `schemas/` (символическая ссылка в git) в образ не попал.
+Исправление: `COPY schemas ./schemas`; тест сравнивает содержимое корневого `schemas/` с пакетным
+побайтно, а не требует ссылку (ссылка не переживает копирование в образ и клон на Windows).
+Повторная проверка: в контейнере `tests/test_schemas.py` 85/85, полный `scripts/docker_run_all.sh`
+на arm64 и amd64 — `ok: true`, 0 провалов.
+
+## 11. Неустранимый предел: «пометить всё» при k ≥ 10
 
 Официальная формула даёт ответу из 30 выводов, содержащему все k истинных, награду (3k − 30)/(30 + k):
 0 при k = 10, +0.073 при k = 11, +0.143 при k = 12. Формула не меняется; реальная политика

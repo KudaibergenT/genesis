@@ -111,7 +111,11 @@ ja.score_episode(output_dir, findings_json, inspection_steps)
 - Лимит 60 с от reset: шаг после истечения возвращает `truncated=true`, пустые findings.
   Submit — одно из 100 действий, в `inspection_steps` не входит.
 - Закрытый режим: `reward` всегда числовой 0; после эпизода `env.submitted_findings()` и
-  `env.inspection_steps()` доступны только процессу жюри.
+  `env.inspection_steps()` доступны только процессу жюри. `submitted_findings()` возвращает ответ
+  ровно в том виде, в каком он был отправлен, в том числе невалидный. Например, без `episode_id` или
+  с чужим `episode_id`: он обязателен, должен совпадать с manifest и никогда не подставляется. Такой
+  ответ `score_episode` оценивает как невалидный submit (−1). `None` бывает только при завершении без
+  submit (truncated, пустые findings).
 - `score_episode` → `{"tp","fp","fn","precision","recall","f1","return"}`; невалидный submit →
   `return = -1`, остальные `null`, ошибка в журнале (`logging` `auditenv.judge`, `ja.score_errors()`).
 

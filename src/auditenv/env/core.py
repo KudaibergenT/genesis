@@ -148,8 +148,12 @@ class AuditEnv:
         return None if self._grade is None else self._grade.as_dict()
 
     def final_submission(self) -> Optional[Dict[str, Any]]:
-        """The accepted findings.json (None if nothing valid was submitted). Evaluator side."""
-        if self._grade is None or self._grade.outcome != "submitted":
+        """What the policy submitted, as sent, for the evaluator (never shown to the policy).
+
+        Includes a structurally invalid submit (e.g. missing or foreign episode_id), so that
+        score_episode grades it as an invalid submit (return -1) rather than as empty findings.
+        None if the episode ended without submit (truncated) or has not ended."""
+        if self._grade is None or self._grade.outcome not in ("submitted", "malformed"):
             return None
         return self._final_submission
 

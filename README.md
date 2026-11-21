@@ -172,7 +172,18 @@ truth и provenance плюс новое название компании; oracl
 могут импортировать оценщик (oracle — на стороне жюри).
 
 **Демо.** `python3.11 scripts/demo.py` — скриптовый аудитор в изолированном процессе решает эпизод
-со взаимодействующими ошибками; транскрипт сохраняется в `docs/demo_transcript.md`.
+со взаимодействующими ошибками; транскрипт сохраняется в `docs/demo_transcript.md`. Сохранённый
+транскрипт записан внутри контейнера, где политика работает под uid 10001 («uid сброшен: True»):
+
+```bash
+mkdir -p results/demo && chmod 0777 results/demo
+docker run --rm --network none --cpus 2 --memory 4g --read-only --tmpfs /tmp --cap-drop ALL \
+  --cap-add SETUID --cap-add SETGID --cap-add KILL --security-opt no-new-privileges \
+  -v "$PWD/results/demo:/demo" --workdir /app --entrypoint python genesis-auditenv:stage3 \
+  scripts/demo.py --out /demo/demo_transcript.md
+```
+
+На macOS без root тот же прогон пишет «uid сброшен: False»; остальной транскрипт совпадает побайтно.
 
 **Архитектуры.** `PLATFORM=linux/amd64 scripts/docker_run_all.sh` собирает и проверяет образ для
 другой архитектуры (на Apple Silicon — под эмуляцией). Нативная проверка arm64 и x86-64 —

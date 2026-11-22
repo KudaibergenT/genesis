@@ -9,7 +9,7 @@
 | проверка | команда | результат |
 |---|---|---|
 | Все тесты, хост (macOS arm64, Python 3.11.18, с реальным Docker) | `pytest` | **1297 / 1297**, 0 пропусков |
-| CI на нативных раннерах GitHub (x86-64 и arm64) | `.github/workflows/docker-multiarch.yml` | **пройдено** для `53997b5` (run [44876463208](https://github.com/KudaibergenT/genesis/actions/runs/44876463208)): x86_64 и aarch64 — 42/42, `ok: true`, pytest 1285 passed / 12 skipped / 0 failed |
+| CI на нативных раннерах GitHub (x86-64 и arm64) | `.github/workflows/docker-multiarch.yml` | **пройдено** для `3874884` (в запуске CI виден прежний SHA `53997b5`: до смены e-mail автора, дерево файлов то же) (run [44876463208](https://github.com/KudaibergenT/genesis/actions/runs/44876463208)): x86_64 и aarch64 — 42/42, `ok: true`, pytest 1285 passed / 12 skipped / 0 failed |
 | Полная офлайн-проверка в контейнере, linux/arm64 (нативно) | `scripts/docker_run_all.sh` | **42 / 42** проверок (+1 информационная таблица); тесты 1285 пройдено, 12 пропущено |
 | Полная офлайн-проверка в контейнере, linux/amd64 (эмуляция) | `PLATFORM=linux/amd64 scripts/docker_run_all.sh` | **42 / 42** проверок; тесты 1285 пройдено, 12 пропущено; `machine = x86_64` |
 | Контракт truth: фикстуры только с полями §03 | `tests/test_truth_contract.py` | 87 / 87 |
@@ -73,8 +73,8 @@ Docker-демона) и 2 теста прав каталога (`tests/test_adap
 |---|---|---|
 | linux/arm64 | нативно (Docker Desktop, Apple Silicon) | 42/42, `machine = aarch64` (2026-11-21) |
 | linux/amd64 | эмуляция x86-64 в Docker Desktop | 42/42, `machine = x86_64` (2026-11-21) |
-| linux/amd64 на нативном x86-64 (коммит `53997b5`) | GitHub Actions, раннер `ubuntu-24.04`, run [44876463208](https://github.com/KudaibergenT/genesis/actions/runs/44876463208) | **пройдено**: хост `x86_64`, в контейнере `machine = x86_64`, `ok = true`, `failed = 0`; артефакт `run_all-x86_64` |
-| linux/arm64 на нативном Linux (коммит `53997b5`) | тот же workflow, раннер `ubuntu-24.04-arm`, тот же run | **пройдено**: хост `aarch64`, в контейнере `machine = aarch64`, `ok = true`, `failed = 0`; артефакт `run_all-aarch64` |
+| linux/amd64 на нативном x86-64 (коммит `3874884`, в CI — прежний SHA `53997b5`) | GitHub Actions, раннер `ubuntu-24.04`, run [44876463208](https://github.com/KudaibergenT/genesis/actions/runs/44876463208) | **пройдено**: хост `x86_64`, в контейнере `machine = x86_64`, `ok = true`, `failed = 0`; артефакт `run_all-x86_64` |
+| linux/arm64 на нативном Linux (коммит `3874884`, в CI — прежний SHA `53997b5`) | тот же workflow, раннер `ubuntu-24.04-arm`, тот же run | **пройдено**: хост `aarch64`, в контейнере `machine = aarch64`, `ok = true`, `failed = 0`; артефакт `run_all-aarch64` |
 
 Первый прогон CI (run 44787035414) упал на обеих архитектурах: оценщик без `CAP_DAC_OVERRIDE` не
 мог записать отчёт в смонтированный каталог, принадлежащий пользователю раннера. Причина
